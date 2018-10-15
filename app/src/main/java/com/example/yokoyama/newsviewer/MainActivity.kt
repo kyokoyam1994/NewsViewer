@@ -4,6 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.support.design.widget.NavigationView
+import android.support.v4.view.GravityCompat
+import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
@@ -13,11 +16,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.example.yokoyama.newsviewer.newsapi.NewsQueryTopHeadlines
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
-//import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.news_viewer_scrollview.*
 import kotlinx.android.synthetic.main.page_indicator.*
 
-class MainActivity : AppCompatActivity(), NewsEntryAdapter.ArticleListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
     val PAGE_SIZE = 20
     val PAGES_SHOWN = 5
@@ -26,6 +30,15 @@ class MainActivity : AppCompatActivity(), NewsEntryAdapter.ArticleListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar)
+
+        val toggle = ActionBarDrawerToggle(
+                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawer_layout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        nav_view.setNavigationItemSelectedListener(this)
+
 
         imageViewFirst.setOnClickListener {
             currentPage = 1
@@ -50,6 +63,40 @@ class MainActivity : AppCompatActivity(), NewsEntryAdapter.ArticleListener {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onBackPressed() {
+        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
+            drawer_layout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        // Handle navigation view item clicks here.
+        when (item.itemId) {
+            R.id.nav_camera -> {
+                // Handle the camera action
+            }
+            R.id.nav_gallery -> {
+
+            }
+            R.id.nav_slideshow -> {
+
+            }
+            R.id.nav_manage -> {
+
+            }
+            R.id.nav_share -> {
+
+            }
+            R.id.nav_send -> {
+
+            }
+        }
+        drawer_layout.closeDrawer(GravityCompat.START)
+        return true
     }
 
     override fun articleSelected(newsEntry: NewsResult.NewsEntry) {
