@@ -1,10 +1,8 @@
-package com.example.yokoyama.newsviewer
+package com.example.yokoyama.newsviewer.newsapi
 
-class NewsResult {
-
-    data class QueryResult(val status: String = "default",
-                           val totalResults: Int = 0,
-                           val articles: List<NewsEntry> = emptyList())
+data class NewsResult (val status: String = "default",
+                       val totalResults: Int = 0,
+                       val articles: List<NewsEntry> = emptyList()) {
 
     data class NewsEntry (val source: ArticleSource = ArticleSource(null, null),
                           val title: String = "",

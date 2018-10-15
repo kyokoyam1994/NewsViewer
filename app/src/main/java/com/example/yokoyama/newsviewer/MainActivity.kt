@@ -1,22 +1,37 @@
 package com.example.yokoyama.newsviewer
 
+import android.content.Intent
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.android.synthetic.main.activity_main.*
-import java.net.HttpURLConnection
-import java.net.URL
+import android.view.ViewGroup
+import android.widget.TextView
+import com.example.yokoyama.newsviewer.newsapi.NewsQueryTopHeadlines
+import com.example.yokoyama.newsviewer.newsapi.NewsResult
+//import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.news_viewer_scrollview.*
+import kotlinx.android.synthetic.main.page_indicator.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NewsEntryAdapter.ArticleListener {
+
+    val PAGE_SIZE = 20
+    val PAGES_SHOWN = 5
+    var currentPage = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //thread(start = true) { requestNewsApi() }
+
+        imageViewFirst.setOnClickListener {
+            currentPage = 1
+            NewsArticleTask().execute()
+        }
+
         NewsArticleTask().execute()
     }
 
@@ -37,42 +52,53 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun articleSelected(newsEntry: NewsResult.NewsEntry) {
+        Log.d("TAG", newsEntry.url)
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(newsEntry.url))
+        startActivity(intent)
+    }
 
-    inner class NewsArticleTask() : AsyncTask<Void, Void, NewsResult.QueryResult?>() {
+    inner class NewsArticleTask : AsyncTask<Void, Void, NewsResult?>() {
 
-        override fun doInBackground(vararg p0: Void?): NewsResult.QueryResult? {
+        override fun doInBackground(vararg p0: Void?): NewsResult? {
             return requestNewsApi()
         }
 
-        override fun onPostExecute(result: NewsResult.QueryResult?) {
+        override fun onPostExecute(result: NewsResult?) {
             super.onPostExecute(result)
-            if (result?.articles != null && this@MainActivity != null) {
-                recyclerViewNewsArticles?.adapter = NewsEntryAdapter(result?.articles)
+
+            if (result?.articles != null) {
+                recyclerViewNewsArticles?.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result.articles)
                 recyclerViewNewsArticles?.layoutManager = LinearLayoutManager(this@MainActivity)
+
+                val pageNumbers = when {
+                    result.totalResults == 0 || result.totalResults % PAGE_SIZE > 0 -> result.totalResults / PAGE_SIZE + 1
+                    else -> result.totalResults / PAGE_SIZE
+                }
+
+                val maxPage = when {
+                    currentPage + PAGES_SHOWN > pageNumbers -> pageNumbers
+                    else -> currentPage + PAGES_SHOWN
+                }
+
+                Log.d("TAG", "current page $currentPage, max page $maxPage")
+                linearLayoutPageIndicator.removeAllViews()
+                for (i in currentPage..maxPage) {
+                    val textViewPageNumber = TextView(this@MainActivity)
+                    textViewPageNumber.text = i.toString()
+                    textViewPageNumber.setOnClickListener {
+                        currentPage = textViewPageNumber.text.toString().toInt()
+                        NewsArticleTask().execute()
+                    }
+                    textViewPageNumber.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    linearLayoutPageIndicator.addView(textViewPageNumber)
+                    Log.d("TAG", "Adding page $i")
+                }
             }
         }
 
-        private fun requestNewsApi() : NewsResult.QueryResult? {
-            val url = URL("https://newsapi.org/v2/top-headlines?country=us")
-            val connection = url.openConnection() as HttpURLConnection
-            var queryResult : NewsResult.QueryResult? = null
-            connection.setRequestProperty("X-Api-Key", "INSERT_YOUR_API_KEY_HERE")
-
-            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                val mapper = ObjectMapper()
-                val response = connection.inputStream.bufferedReader().use { it.readText() }
-                queryResult = mapper.readValue<NewsResult.QueryResult>(response, NewsResult.QueryResult::class.java)
-
-                println(queryResult.status)
-                println(queryResult.totalResults)
-                println(queryResult.articles.size)
-                println("Success!\n$response")
-            } else {
-                val text = connection.errorStream.buffered().reader().use { reader -> println(reader.readText()) }
-                println("${connection.responseCode} , ${connection.responseMessage}")
-            }
-
-            return queryResult
+        private fun requestNewsApi() : NewsResult? {
+            return NewsQueryTopHeadlines().query()
         }
     }
 
