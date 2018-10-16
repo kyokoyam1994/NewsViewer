@@ -14,18 +14,23 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.TextView
-import com.example.yokoyama.newsviewer.newsapi.NewsQueryTopHeadlines
+import com.example.yokoyama.newsviewer.newsapi.BASE_URL
+import com.example.yokoyama.newsviewer.newsapi.NewsApiService
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.news_viewer_scrollview.*
 import kotlinx.android.synthetic.main.page_indicator.*
+import org.json.JSONObject
+import retrofit2.Retrofit
+import retrofit2.converter.jackson.JacksonConverterFactory
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
     val PAGE_SIZE = 20
     val PAGES_SHOWN = 5
-    var currentPage = 1
+    val MIN_PAGE = 1
+    var currentPage = MIN_PAGE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +50,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             NewsArticleTask().execute()
         }
 
-        NewsArticleTask().execute()
+        //NewsArticleTask().execute()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -76,7 +81,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
-            R.id.nav_camera -> {
+            /*R.id.nav_camera -> {
                 // Handle the camera action
             }
             R.id.nav_gallery -> {
@@ -93,7 +98,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             R.id.nav_send -> {
 
-            }
+            }*/
         }
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
@@ -145,7 +150,22 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         private fun requestNewsApi() : NewsResult? {
-            return NewsQueryTopHeadlines().query()
+            //return NewsQueryTopHeadlines().query()
+            val retrofit = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(JacksonConverterFactory.create()).build()
+            val newsApiService = retrofit.create(NewsApiService::class.java)
+            val response = newsApiService.topHeadlines("us", "", "", PAGE_SIZE, 1).execute()
+
+            if (response.isSuccessful) {
+                Log.d("TAG", "SUCCESS RETRO")
+            } else {
+                try {
+                    val jObjError = JSONObject(response.errorBody()?.string())
+                    Log.d("TAG", jObjError.getString("message"))
+                } catch (e: Exception) {
+                    Log.d("TAG", e.message)
+                }
+            }
+            return null
         }
     }
 

@@ -5,34 +5,45 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:id="@+id/nav_business"
+            android:icon="@drawable/nav_business_button_24"
+            android:title="Business" />
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:id="@+id/nav_entertainment"
+            android:icon="@drawable/nav_entertainment_button_24"
+            android:title="Entertainment" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/nav_general"
+            android:icon="@drawable/nav_general_button_24"
+            android:title="General" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/nav_health"
+            android:icon="@drawable/nav_health_button_24"
+            android:title="Health" />
+        <item
+            android:id="@+id/nav_science"
+            android:icon="@drawable/nav_science_button_24"
+            android:title="Science" />
+        <item
+            android:id="@+id/nav_sports"
+            android:icon="@drawable/nav_sports_button_24"
+            android:title="Sports" />
+        <item
+            android:id="@+id/nav_technology"
+            android:icon="@drawable/nav_technology_button_24"
+            android:title="Technology" />
     </group>
 
-    <item android:title="Communicate">
+    <!--<item android:title="Placeholder">
         <menu>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:id="@+id/nav_everything"
+                android:title="Everything" />-->
             <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
-        </menu>
-    </item>
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/nav_settings_button_24"
+                android:title="Settings" />
+    <!--    </menu>
+    </item>-->
 
 </menu>
