@@ -57,6 +57,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonSearch" />
 
+    <Spinner
+        android:id="@+id/spinnerSort"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="1dp"
+        android:entries="@array/spinner_sort_options"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonSearch"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSearch"
+        app:layout_constraintTop_toTopOf="@+id/buttonSearch" />
+
     <!--<android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerViewNewsArticles"
         android:layout_width="match_parent"

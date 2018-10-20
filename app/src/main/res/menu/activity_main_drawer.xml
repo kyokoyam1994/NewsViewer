@@ -3,47 +3,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_business"
-            android:icon="@drawable/nav_business_button_24"
-            android:title="Business" />
-        <item
-            android:id="@+id/nav_entertainment"
-            android:icon="@drawable/nav_entertainment_button_24"
-            android:title="Entertainment" />
-        <item
-            android:id="@+id/nav_general"
-            android:icon="@drawable/nav_general_button_24"
-            android:title="General" />
-        <item
-            android:id="@+id/nav_health"
-            android:icon="@drawable/nav_health_button_24"
-            android:title="Health" />
-        <item
-            android:id="@+id/nav_science"
-            android:icon="@drawable/nav_science_button_24"
-            android:title="Science" />
-        <item
-            android:id="@+id/nav_sports"
-            android:icon="@drawable/nav_sports_button_24"
-            android:title="Sports" />
-        <item
-            android:id="@+id/nav_technology"
-            android:icon="@drawable/nav_technology_button_24"
-            android:title="Technology" />
-    </group>
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/nav_home_button_24"
+        android:title="Home" />
 
-    <!--<item android:title="Placeholder">
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/nav_settings_button_24"
+        android:title="Settings" />
+
+    <item android:title="Top Headlines">
         <menu>
             <item
-                android:id="@+id/nav_everything"
-                android:title="Everything" />-->
+                android:id="@+id/nav_business"
+                android:icon="@drawable/nav_business_button_24"
+                android:title="Business" />
             <item
-                android:id="@+id/nav_settings"
-                android:icon="@drawable/nav_settings_button_24"
-                android:title="Settings" />
-    <!--    </menu>
-    </item>-->
-
+                android:id="@+id/nav_entertainment"
+                android:icon="@drawable/nav_entertainment_button_24"
+                android:title="Entertainment" />
+            <item
+                android:id="@+id/nav_general"
+                android:icon="@drawable/nav_general_button_24"
+                android:title="General" />
+            <item
+                android:id="@+id/nav_health"
+                android:icon="@drawable/nav_health_button_24"
+                android:title="Health" />
+            <item
+                android:id="@+id/nav_science"
+                android:icon="@drawable/nav_science_button_24"
+                android:title="Science" />
+            <item
+                android:id="@+id/nav_sports"
+                android:icon="@drawable/nav_sports_button_24"
+                android:title="Sports" />
+            <item
+                android:id="@+id/nav_technology"
+                android:icon="@drawable/nav_technology_button_24"
+                android:title="Technology" />
+        </menu>
+    </item>
 </menu>

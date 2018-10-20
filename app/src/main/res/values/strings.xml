@@ -7,4 +7,15 @@
     <string name="nav_header_title">@string/app_name</string>
     <string name="nav_header_subtitle">Updated Daily</string>
     <string name="nav_header_desc">Navigation header</string>
+
+    <string name="text_view_articles_per_page_text">Articles Per Page</string>>
+
+
+    <string-array name="spinner_sort_options">
+        <item>Sort By</item>
+        <item>Published Date</item>
+        <item>Relevancy</item>
+        <item>Popularity</item>
+    </string-array>
+
 </resources>

@@ -17,3 +17,5 @@ data class NewsResult (val status: String = "default",
                               val name: String? = null)
 
 }
+
+data class NewsError (val status: String = "", val code: String = "", val message: String = "default")
