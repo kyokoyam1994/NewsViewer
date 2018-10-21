@@ -18,13 +18,10 @@ class NewsEntryAdapter(private val context: Context,
                        private val articleListener: ArticleListener,
                        private val newsEntries: List<NewsResult.NewsEntry>) : RecyclerView.Adapter<NewsEntryAdapter.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.news_entry, parent, false))
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
+        = ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.news_entry, parent, false))
 
-    override fun getItemCount(): Int {
-        return newsEntries.size
-    }
+    override fun getItemCount(): Int = newsEntries.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.textViewArticleTitle.text = newsEntries[position].title

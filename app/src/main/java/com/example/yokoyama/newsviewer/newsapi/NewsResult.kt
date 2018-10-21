@@ -1,8 +1,18 @@
 package com.example.yokoyama.newsviewer.newsapi
 
+import com.example.yokoyama.newsviewer.MAX_ARTICLES
+import com.example.yokoyama.newsviewer.PAGE_SIZE
+
 data class NewsResult (val status: String = "default",
                        val totalResults: Int = 0,
                        val articles: List<NewsEntry> = emptyList()) {
+
+    val pageCount
+        get() = when {
+            totalResults > MAX_ARTICLES -> MAX_ARTICLES / PAGE_SIZE
+            totalResults == 0 || totalResults % PAGE_SIZE > 0 -> totalResults / PAGE_SIZE + 1
+            else -> totalResults / PAGE_SIZE
+        }
 
     data class NewsEntry (val source: ArticleSource = ArticleSource(null, null),
                           val title: String = "",

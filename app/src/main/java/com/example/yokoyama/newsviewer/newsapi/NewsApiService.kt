@@ -1,6 +1,7 @@
 package com.example.yokoyama.newsviewer.newsapi
 
 import com.example.yokoyama.newsviewer.BuildConfig
+import io.reactivex.Single
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Headers
@@ -19,7 +20,7 @@ interface NewsApiService {
                      @Query("sources") sources : String? = null,
                      @Query("q") q : String? = null,
                      @Query("pageSize") pageSize : Int? = null,
-                     @Query("page") page : Int? = null) : Call<NewsResult>
+                     @Query("page") page : Int? = null) : Single<NewsResult>
 
     @Headers("X-Api-Key: ${BuildConfig.News_API_Key}")
     @GET("/v2/everything")
@@ -32,5 +33,5 @@ interface NewsApiService {
                    @Query("language") language : String? = null,
                    @Query("sortBy") sortBy : String? = null,
                    @Query("pageSize") pageSize : Int? = null,
-                   @Query("page") page : Int? = null) : Call<NewsResult>
+                   @Query("page") page : Int? = null) : Single<NewsResult>
 }

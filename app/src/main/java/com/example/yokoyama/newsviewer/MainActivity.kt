@@ -3,7 +3,6 @@ package com.example.yokoyama.newsviewer
 import android.content.Intent
 import android.graphics.Paint
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -22,14 +21,19 @@ import com.example.yokoyama.newsviewer.newsapi.NewsApiService
 import com.example.yokoyama.newsviewer.newsapi.NewsError
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.reactivex.*
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.news_viewer_scrollview.*
-import kotlinx.android.synthetic.main.page_indicator.*
-import px
+import retrofit2.HttpException
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.jackson.JacksonConverterFactory
-import java.lang.Exception
+
+import px
 
 const val PAGE_SIZE = 20
 const val LEFT_BIAS = 4
@@ -40,19 +44,67 @@ const val MAX_ARTICLES = 1000
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
     private lateinit var currentState: SearchState
+    private val STATE_KEY: String = "STATE_KEY"
 
     private fun refreshArticles(state : SearchState) {
         currentState = state
-        NewsArticleTask(currentState).execute()
+        val retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(JacksonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build()
+        val newsApiService = retrofit.create(NewsApiService::class.java)
+        val response = when (state.currentCategory) {
+            is NewsCategory.Everything -> newsApiService.everything(q = state.queryString,
+                    pageSize = state.pageSize,
+                    page = state.currentPage)
+
+            is NewsCategory.TopHeadlines -> newsApiService.topHeadlines(country = "us",
+                    category = state.currentCategory.topHeadlinesCategory.category,
+                    q = state.queryString,
+                    pageSize = state.pageSize,
+                    page = state.currentPage)
+        }
+
+
+        //Observable.just("Hello").subscribe()
+        //Single.just("Hello").
+        response.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : SingleObserver<NewsResult> {
+                override fun onSuccess(result: NewsResult) {
+                    Log.d("TAG", "SUCCESS")
+                    textViewInfoMessage.visibility = View.GONE
+                    recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result.articles)
+                    recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this@MainActivity)
+                    populatePages(result)
+                }
+
+                override fun onSubscribe(d: Disposable) { Log.d("TAG", "SUBSCRIBED") }
+
+                override fun onError(e: Throwable) {
+                    when (e) {
+                        is HttpException  ->  {
+                            val mapper = ObjectMapper()
+                            val newsError = mapper.readValue<NewsError>(e.response().errorBody()?.string(), NewsError::class.java)
+                            Log.d("TAG", newsError.toString())
+                        }
+                    }
+                    recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, emptyList())
+                    textViewInfoMessage.visibility = View.VISIBLE
+                }
+            })
     }
 
     private fun loadCategory(category: NewsCategory) {
         when (category) {
             is NewsCategory.Everything -> {
                 spinnerSort.visibility = View.VISIBLE
+                supportActionBar?.title = category.title
             }
             is NewsCategory.TopHeadlines -> {
                 spinnerSort.visibility = View.GONE
+                supportActionBar?.title = category.topHeadlinesCategory.category.capitalize()
             }
         }
         refreshArticles(SearchState(currentPage = MIN_PAGE,
@@ -61,23 +113,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun populatePages(result : NewsResult) {
-        val totalPages = when {
-            result.totalResults > MAX_ARTICLES -> MAX_ARTICLES / PAGE_SIZE
-            result.totalResults == 0 || result.totalResults % PAGE_SIZE > 0 -> result.totalResults / PAGE_SIZE + 1
-            else -> result.totalResults / PAGE_SIZE
-        }
-        currentState = currentState.copy(totalPages = totalPages)
-        textViewCurrentPage.text = "Page ${currentState.currentPage} of $totalPages"
-
+        currentState = currentState.copy(queryResult = result)
         val limit = LEFT_BIAS + RIGHT_BIAS
-
         var leftBound = when {
             currentState.currentPage - LEFT_BIAS < MIN_PAGE -> MIN_PAGE
             else -> currentState.currentPage - LEFT_BIAS
         }
 
         var rightBound = when {
-            currentState.currentPage + RIGHT_BIAS > totalPages -> totalPages
+            currentState.currentPage + RIGHT_BIAS > result.pageCount -> result.pageCount
             else -> currentState.currentPage + RIGHT_BIAS
         }
 
@@ -89,11 +133,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             rightBound = when {
-                rightBound + (limit - difference) > totalPages -> totalPages
+                rightBound + (limit - difference) > result.pageCount -> result.pageCount
                 else -> rightBound + (limit - difference)
             }
         }
 
+        textViewCurrentPage.text = "Page ${currentState.currentPage} of ${result.pageCount}"
         linearLayoutPageIndicator.removeAllViews()
         for (i in leftBound..rightBound) {
             val layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -137,14 +182,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         imageViewNext.setOnClickListener {
-            if (currentState.currentPage + 1 <= currentState.totalPages) refreshArticles(currentState.copy(currentPage = currentState.currentPage + 1))
+            val pageCount = currentState.queryResult?.pageCount
+            if (pageCount != null && currentState.currentPage + 1 <= pageCount) refreshArticles(currentState.copy(currentPage = currentState.currentPage + 1))
         }
 
         imageViewLast.setOnClickListener {
-            refreshArticles(currentState.copy(currentPage = currentState.totalPages))
+            val pageCount = currentState.queryResult?.pageCount
+            if (pageCount != null) refreshArticles(currentState.copy(currentPage = pageCount))
         }
 
         loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL))
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        //outState?.putParcelable(STATE_KEY, currentState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -191,52 +243,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(newsEntry.url))
         startActivity(intent)
     }
-
-    inner class NewsArticleTask(private val state : SearchState) : AsyncTask<Void, Void, NewsResult?>() {
-
-        override fun doInBackground(vararg p0: Void?): NewsResult? {
-            val retrofit = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(JacksonConverterFactory.create()).build()
-            val newsApiService = retrofit.create(NewsApiService::class.java)
-            val response = when (state.currentCategory) {
-                is NewsCategory.Everything -> newsApiService.everything(q = state.queryString,
-                        pageSize = state.pageSize,
-                        page = state.currentPage).execute()
-
-                is NewsCategory.TopHeadlines -> newsApiService.topHeadlines(country = "us",
-                        category = state.currentCategory.topHeadlinesCategory.category,
-                        q = state.queryString,
-                        pageSize = state.pageSize,
-                        page = state.currentPage).execute()
-            }
-
-            return if (response.isSuccessful) {
-                Log.d("SUCCESS", response.raw().request().url().toString())
-                response.body()
-            } else {
-                try {
-                    val mapper = ObjectMapper()
-                    val newsError = mapper.readValue<NewsError>(response.errorBody()?.string(), NewsError::class.java)
-                    Log.d("TAG", newsError.toString())
-                } catch (e : Exception) {
-                    Log.d("TAG", e.message)
-                }
-                null
-            }
-        }
-
-        override fun onPostExecute(result: NewsResult?) {
-            super.onPostExecute(result)
-            if (result?.articles != null) {
-                recyclerViewNewsArticles?.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result.articles)
-                recyclerViewNewsArticles?.layoutManager = LinearLayoutManager(this@MainActivity)
-                populatePages(result)
-            }
-        }
-    }
 }
 
 data class SearchState (val currentPage : Int,
-                        val totalPages : Int = MIN_PAGE,
                         val pageSize : Int,
                         val currentCategory : NewsCategory,
-                        val queryString : String? = null)
+                        val queryString : String? = null,
+                        val queryResult: NewsResult? = null)

@@ -1,7 +1,8 @@
 package com.example.yokoyama.newsviewer
 
+
 sealed class NewsCategory {
-    object Everything : NewsCategory()
+    object Everything : NewsCategory() { const val title = "Home" }
     class TopHeadlines(val topHeadlinesCategory: TopHeadlinesCategory) : NewsCategory()
 }
 
