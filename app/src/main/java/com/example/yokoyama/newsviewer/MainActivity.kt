@@ -34,24 +34,20 @@ import java.lang.Exception
 const val PAGE_SIZE = 20
 const val LEFT_BIAS = 4
 const val RIGHT_BIAS = 5
-
 const val MIN_PAGE = 1
 const val MAX_ARTICLES = 1000
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
-    var currentPage = MIN_PAGE
-    var totalPages = MIN_PAGE
-    lateinit var currentCategory : NewsCategory
+    private lateinit var currentState: SearchState
 
-    private fun refreshArticles(pageNumber: Int) {
-        currentPage = pageNumber
-        NewsArticleTask(searchView.query.toString()).execute()
+    private fun refreshArticles(state : SearchState) {
+        currentState = state
+        NewsArticleTask(currentState).execute()
     }
 
     private fun loadCategory(category: NewsCategory) {
-        currentCategory = category
-        when (currentCategory) {
+        when (category) {
             is NewsCategory.Everything -> {
                 spinnerSort.visibility = View.VISIBLE
             }
@@ -59,28 +55,30 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 spinnerSort.visibility = View.GONE
             }
         }
-        refreshArticles(MIN_PAGE)
+        refreshArticles(SearchState(currentPage = MIN_PAGE,
+                pageSize = PAGE_SIZE,
+                currentCategory = category))
     }
 
     private fun populatePages(result : NewsResult) {
-        totalPages = when {
+        val totalPages = when {
             result.totalResults > MAX_ARTICLES -> MAX_ARTICLES / PAGE_SIZE
             result.totalResults == 0 || result.totalResults % PAGE_SIZE > 0 -> result.totalResults / PAGE_SIZE + 1
             else -> result.totalResults / PAGE_SIZE
         }
-
-        textViewCurrentPage.text = "Page $currentPage of $totalPages"
+        currentState = currentState.copy(totalPages = totalPages)
+        textViewCurrentPage.text = "Page ${currentState.currentPage} of $totalPages"
 
         val limit = LEFT_BIAS + RIGHT_BIAS
 
         var leftBound = when {
-            currentPage - LEFT_BIAS < MIN_PAGE -> MIN_PAGE
-            else -> currentPage - LEFT_BIAS
+            currentState.currentPage - LEFT_BIAS < MIN_PAGE -> MIN_PAGE
+            else -> currentState.currentPage - LEFT_BIAS
         }
 
         var rightBound = when {
-            currentPage + RIGHT_BIAS > totalPages -> totalPages
-            else -> currentPage + RIGHT_BIAS
+            currentState.currentPage + RIGHT_BIAS > totalPages -> totalPages
+            else -> currentState.currentPage + RIGHT_BIAS
         }
 
         val difference = rightBound - leftBound
@@ -103,10 +101,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             layoutParams.marginEnd = 4.px
 
             val textViewPageNumber = TextView(this@MainActivity)
-            if (i == currentPage) textViewPageNumber.paintFlags = (textViewPageNumber.paintFlags or Paint.UNDERLINE_TEXT_FLAG)
+            if (i == currentState.currentPage) textViewPageNumber.paintFlags = (textViewPageNumber.paintFlags or Paint.UNDERLINE_TEXT_FLAG)
             textViewPageNumber.text = i.toString()
             textViewPageNumber.layoutParams = layoutParams
-            textViewPageNumber.setOnClickListener { refreshArticles(textViewPageNumber.text.toString().toInt()) }
+
+            textViewPageNumber.setOnClickListener { refreshArticles(currentState.copy(currentPage = textViewPageNumber.text.toString().toInt())) }
             linearLayoutPageIndicator.addView(textViewPageNumber)
             Log.d("TAG", "Adding page $i")
         }
@@ -122,12 +121,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
-        buttonSearch.setOnClickListener { refreshArticles(MIN_PAGE) }
+        buttonSearch.setOnClickListener {
+            refreshArticles(SearchState(currentPage = MIN_PAGE,
+                                        queryString = searchView.query.toString(),
+                                        pageSize = PAGE_SIZE,
+                                        currentCategory = currentState.currentCategory ))
+        }
 
-        imageViewFirst.setOnClickListener { refreshArticles(MIN_PAGE) }
-        imageViewPrev.setOnClickListener { if (currentPage - 1 >= MIN_PAGE) refreshArticles(currentPage - 1) }
-        imageViewNext.setOnClickListener { if (currentPage + 1 <= totalPages) refreshArticles(currentPage + 1) }
-        imageViewLast.setOnClickListener { refreshArticles(totalPages) }
+        imageViewFirst.setOnClickListener {
+            refreshArticles(currentState.copy(currentPage = MIN_PAGE))
+        }
+
+        imageViewPrev.setOnClickListener {
+            if (currentState.currentPage - 1 >= MIN_PAGE) refreshArticles(currentState.copy(currentPage = currentState.currentPage - 1))
+        }
+
+        imageViewNext.setOnClickListener {
+            if (currentState.currentPage + 1 <= currentState.totalPages) refreshArticles(currentState.copy(currentPage = currentState.currentPage + 1))
+        }
+
+        imageViewLast.setOnClickListener {
+            refreshArticles(currentState.copy(currentPage = currentState.totalPages))
+        }
 
         loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL))
     }
@@ -177,21 +192,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         startActivity(intent)
     }
 
-    inner class NewsArticleTask(val searchQuery : String) : AsyncTask<Void, Void, NewsResult?>() {
+    inner class NewsArticleTask(private val state : SearchState) : AsyncTask<Void, Void, NewsResult?>() {
 
         override fun doInBackground(vararg p0: Void?): NewsResult? {
             val retrofit = Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(JacksonConverterFactory.create()).build()
             val newsApiService = retrofit.create(NewsApiService::class.java)
-            val response = when (currentCategory) {
-                is NewsCategory.Everything -> newsApiService.everything(q = searchQuery,
-                        pageSize = PAGE_SIZE,
-                        page = currentPage).execute()
+            val response = when (state.currentCategory) {
+                is NewsCategory.Everything -> newsApiService.everything(q = state.queryString,
+                        pageSize = state.pageSize,
+                        page = state.currentPage).execute()
 
                 is NewsCategory.TopHeadlines -> newsApiService.topHeadlines(country = "us",
-                        category = (currentCategory as NewsCategory.TopHeadlines).topHeadlinesCategory.category,
-                        q = searchQuery,
-                        pageSize = PAGE_SIZE,
-                        page = currentPage).execute()
+                        category = state.currentCategory.topHeadlinesCategory.category,
+                        q = state.queryString,
+                        pageSize = state.pageSize,
+                        page = state.currentPage).execute()
             }
 
             return if (response.isSuccessful) {
@@ -218,5 +233,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
     }
-
 }
+
+data class SearchState (val currentPage : Int,
+                        val totalPages : Int = MIN_PAGE,
+                        val pageSize : Int,
+                        val currentCategory : NewsCategory,
+                        val queryString : String? = null)
