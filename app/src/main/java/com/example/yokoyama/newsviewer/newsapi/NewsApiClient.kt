@@ -2,14 +2,27 @@ package com.example.yokoyama.newsviewer.newsapi
 
 import com.example.yokoyama.newsviewer.BuildConfig
 import io.reactivex.Single
-import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.jackson.JacksonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query
 
 const val BASE_URL: String = "https://newsapi.org"
 
-interface NewsApiService {
+interface NewsApiClient {
+
+    companion object {
+        val instance : NewsApiClient by lazy {
+            val retrofit = Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(JacksonConverterFactory.create())
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .build()
+            retrofit.create(NewsApiClient::class.java)
+        }
+    }
 
     /* News API does not allow the use of country and category with sources. If using this request,
     make sure to only use one or the other. */

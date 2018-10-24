@@ -14,7 +14,7 @@ data class NewsResult (val status: String = "default",
             else -> totalResults / PAGE_SIZE
         }
 
-    data class NewsEntry (val source: ArticleSource = ArticleSource(null, null),
+    data class NewsEntry (val source: ArticleSource = ArticleSource(),
                           val title: String = "",
                           val author: String = "",
                           val description: String = "",

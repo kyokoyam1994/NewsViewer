@@ -11,11 +11,18 @@
     <string name="text_view_articles_per_page_text">Articles Per Page</string>>
 
 
+
+    <string name="spinner_sort_default_option">Sort By</string>
+    <string name="spinner_sort_published_date_option">Published Date</string>
+    <string name="spinner_sort_relevancy_option">Relevancy</string>
+    <string name="spinner_sort_popularity_option">Popularity</string>
     <string-array name="spinner_sort_options">
-        <item>Sort By</item>
-        <item>Published Date</item>
-        <item>Relevancy</item>
-        <item>Popularity</item>
+        <item>@string/spinner_sort_default_option</item>
+        <item>@string/spinner_sort_published_date_option</item>
+        <item>@string/spinner_sort_relevancy_option</item>
+        <item>@string/spinner_sort_popularity_option</item>
     </string-array>
+
+
 
 </resources>

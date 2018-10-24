@@ -1,4 +1,4 @@
-package com.example.yokoyama.newsviewer.newsapi
+package com.example.yokoyama.newsviewer
 
 import android.app.Application
 import android.util.Log
