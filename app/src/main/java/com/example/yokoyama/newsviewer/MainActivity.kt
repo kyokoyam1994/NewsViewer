@@ -1,5 +1,6 @@
 package com.example.yokoyama.newsviewer
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.graphics.Paint
@@ -39,12 +40,22 @@ const val MAX_ARTICLES = 1000
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
-    private val newsViewModel : NewsViewModel by lazy { ViewModelProviders.of(this).get(NewsViewModel::class.java) }
     private val compositeDisposable : CompositeDisposable = CompositeDisposable()
-    private lateinit var currentState: SearchState
+    private val newsViewModel : NewsViewModel by lazy { ViewModelProviders.of(this).get(NewsViewModel::class.java) }
 
     private fun reloadArticles(state : SearchState) {
-        currentState = state
+        when (state.currentCategory) {
+            is NewsCategory.Everything -> {
+                spinnerSort.visibility = View.VISIBLE
+                supportActionBar?.title = state.currentCategory.title
+            }
+
+            is NewsCategory.TopHeadlines -> {
+                spinnerSort.visibility = View.GONE
+                supportActionBar?.title = state.currentCategory.topHeadlinesCategory.category.capitalize()
+            }
+        }
+
         val response = when (state.currentCategory) {
             is NewsCategory.Everything -> NewsApiClient.instance.everything(q = state.queryString,
                     sortBy = when(spinnerSort.selectedItem.toString()) {
@@ -67,7 +78,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             {result ->
                     Log.d("TAG", "SUCCESS")
                     textViewInfoMessage.visibility = View.GONE
-                    recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result.articles)
+                    recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result)
                     recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this@MainActivity)
                     populatePages(result)},
             {e ->
@@ -78,41 +89,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         Log.d("TAG", newsError.toString())
                     }
                 }
-                recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, emptyList())
+                recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, NewsResult())
                 textViewInfoMessage.visibility = View.VISIBLE}
         )
     }
 
-    private fun loadCategory(category: NewsCategory, refresh: Boolean = true) {
-        when (category) {
-            is NewsCategory.Everything -> {
-                spinnerSort.visibility = View.VISIBLE
-                supportActionBar?.title = category.title
-            }
-            is NewsCategory.TopHeadlines -> {
-                spinnerSort.visibility = View.GONE
-                supportActionBar?.title = category.topHeadlinesCategory.category.capitalize()
-            }
-        }
-
-        if (refresh) {
-            reloadArticles(SearchState(currentPage = MIN_PAGE,
-                    pageSize = PAGE_SIZE,
-                    currentCategory = category))
-        }
-    }
-
     private fun populatePages(result : NewsResult) {
-        currentState = currentState.copy(queryResult = result)
         val limit = LEFT_BIAS + RIGHT_BIAS
         var leftBound = when {
-            currentState.currentPage - LEFT_BIAS < MIN_PAGE -> MIN_PAGE
-            else -> currentState.currentPage - LEFT_BIAS
+            newsViewModel.currentState.value!!.currentPage - LEFT_BIAS < MIN_PAGE -> MIN_PAGE
+            else -> newsViewModel.currentState.value!!.currentPage - LEFT_BIAS
         }
 
         var rightBound = when {
-            currentState.currentPage + RIGHT_BIAS > result.pageCount -> result.pageCount
-            else -> currentState.currentPage + RIGHT_BIAS
+            newsViewModel.currentState.value!!.currentPage + RIGHT_BIAS > result.pageCount -> result.pageCount
+            else -> newsViewModel.currentState.value!!.currentPage + RIGHT_BIAS
         }
 
         val difference = rightBound - leftBound
@@ -128,9 +119,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        textViewCurrentPage.text = "Page ${currentState.currentPage} of ${result.pageCount}"
-
-        if (currentState.currentPage - 1 < MIN_PAGE) {
+        textViewCurrentPage.text = "Page ${newsViewModel.currentState.value!!.currentPage} of ${result.pageCount}"
+        if (newsViewModel.currentState.value!!.currentPage - 1 < MIN_PAGE) {
             imageViewFirst.visibility = View.GONE
             imageViewPrev.visibility = View.GONE
             imageViewFirst.setOnClickListener(null)
@@ -138,11 +128,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             imageViewFirst.visibility = View.VISIBLE
             imageViewPrev.visibility = View.VISIBLE
-            imageViewFirst.setOnClickListener { reloadArticles(currentState.copy(currentPage = MIN_PAGE)) }
-            imageViewPrev.setOnClickListener { reloadArticles(currentState.copy(currentPage = currentState.currentPage - 1)) }
+            imageViewFirst.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = MIN_PAGE)) }
+            imageViewPrev.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = newsViewModel.currentState.value!!.currentPage - 1)) }
         }
 
-        if (currentState.currentPage + 1 > result.pageCount) {
+        if (newsViewModel.currentState.value!!.currentPage + 1 > result.pageCount) {
             imageViewNext.visibility = View.GONE
             imageViewLast.visibility = View.GONE
             imageViewNext.setOnClickListener(null)
@@ -150,8 +140,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             imageViewNext.visibility = View.VISIBLE
             imageViewLast.visibility = View.VISIBLE
-            imageViewNext.setOnClickListener { reloadArticles(currentState.copy(currentPage = currentState.currentPage + 1)) }
-            imageViewLast.setOnClickListener { reloadArticles(currentState.copy(currentPage = result.pageCount)) }
+            imageViewNext.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = newsViewModel.currentState.value!!.currentPage + 1)) }
+            imageViewLast.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = result.pageCount)) }
         }
 
         linearLayoutPageIndicator.removeAllViews()
@@ -161,26 +151,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             layoutParams.marginEnd = 4.px
 
             val textViewPageNumber = TextView(this@MainActivity)
-            if (i == currentState.currentPage) textViewPageNumber.paintFlags = (textViewPageNumber.paintFlags or Paint.UNDERLINE_TEXT_FLAG)
+            if (i == newsViewModel.currentState.value!!.currentPage) textViewPageNumber.paintFlags = (textViewPageNumber.paintFlags or Paint.UNDERLINE_TEXT_FLAG)
             textViewPageNumber.text = i.toString()
             textViewPageNumber.layoutParams = layoutParams
 
-            textViewPageNumber.setOnClickListener { reloadArticles(currentState.copy(currentPage = textViewPageNumber.text.toString().toInt())) }
+            textViewPageNumber.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = textViewPageNumber.text.toString().toInt())) }
             linearLayoutPageIndicator.addView(textViewPageNumber)
-            Log.d("TAG", "Adding page $i")
         }
-    }
-
-    private fun loadFromPreviousState(state : SearchState, queryResult: NewsResult?) {
-        /*loadCategory(state.currentCategory, false)
-        if (queryResult != null) {
-            recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, queryResult.articles)
-            populatePages(queryResult)
-        } else {
-            reloadArticles(SearchState(currentPage = MIN_PAGE,
-                    pageSize = PAGE_SIZE,
-                    currentCategory = state.currentCategory))
-        }*/
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -194,18 +171,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
         buttonSearch.setOnClickListener {
-            reloadArticles(SearchState(currentPage = MIN_PAGE,
-                                        queryString = searchView.query.toString(),
-                                        pageSize = PAGE_SIZE,
-                                        currentCategory = currentState.currentCategory))
+            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, queryString = searchView.query.toString(),
+                                        pageSize = PAGE_SIZE, currentCategory = newsViewModel.currentState.value!!.currentCategory))
         }
 
-        if (savedInstanceState != null && ::currentState.isInitialized) {
-            Log.d("TAG", "SAVEDINSTANCESTATE NOT NULL")
-            loadFromPreviousState(currentState, currentState.queryResult)
-        } else {
-            Log.d("TAG", "SAVEDINSTANCESTATE NULL")
-            loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL))
+        val stateObserver : Observer<SearchState> = Observer {
+            Log.d("OBSERVING", "CHANGE!!!")
+            it?.let {reloadArticles(it)}
+        }
+
+        newsViewModel.currentState.observe(this, stateObserver)
+        if (newsViewModel.currentState.value == null) {
+            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, pageSize = PAGE_SIZE, currentCategory = NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL)))
         }
     }
 
@@ -235,19 +212,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        var state : NewsCategory? = null
         when (item.itemId) {
-            R.id.nav_home -> loadCategory(NewsCategory.Everything)
-            R.id.nav_business -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.BUSINESS))
-            R.id.nav_entertainment -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.ENTERTAINMENT))
-            R.id.nav_general -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL))
-            R.id.nav_health -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.HEALTH))
-            R.id.nav_science -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.SCIENCE))
-            R.id.nav_sports -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.SPORTS))
-            R.id.nav_technology -> loadCategory(NewsCategory.TopHeadlines(TopHeadlinesCategory.TECHNOLOGY))
-            R.id.nav_settings -> {
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
-            }
+            R.id.nav_home -> state = NewsCategory.Everything
+            R.id.nav_business -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.BUSINESS)
+            R.id.nav_entertainment -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.ENTERTAINMENT)
+            R.id.nav_general -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL)
+            R.id.nav_health -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.HEALTH)
+            R.id.nav_science -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.SCIENCE)
+            R.id.nav_sports -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.SPORTS)
+            R.id.nav_technology -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.TECHNOLOGY)
+            R.id.nav_settings -> startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        if (state != null) {
+            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, pageSize = PAGE_SIZE, currentCategory = state))
         }
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
@@ -255,7 +234,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun articleSelected(newsEntry: NewsResult.NewsEntry) {
         Log.d("TAG", newsEntry.url)
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(newsEntry.url))
-        startActivity(intent)
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(newsEntry.url)))
     }
 }

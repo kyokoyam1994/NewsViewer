@@ -2,22 +2,19 @@ package com.example.yokoyama.newsviewer
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import com.example.yokoyama.newsviewer.newsapi.NewsResult
 
 class NewsViewModel : ViewModel() {
+    val currentState: MutableLiveData<SearchState> by lazy { MutableLiveData<SearchState>() }
 
-    lateinit var state: SearchState
-
-    //private val changeNotifier = MutableLiveData<SearchState>()
-    //val queryResult: NewsResult? = null
-
-    /*fun updateState(state: SearchState) {
-        changeNotifier.value = state
-    }*/
+    fun updateState(state: SearchState, mainThread : Boolean = true){
+        when (mainThread) {
+            true -> currentState.value = state
+            false -> currentState.postValue(state)
+        }
+    }
 }
 
 data class SearchState (val currentPage : Int,
                         val pageSize : Int,
                         val currentCategory : NewsCategory,
-                        val queryString : String? = null,
-                        val queryResult: NewsResult? = null)
+                        val queryString : String? = null)

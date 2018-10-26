@@ -16,17 +16,17 @@ import kotlinx.android.synthetic.main.news_entry.view.*
 
 class NewsEntryAdapter(private val context: Context,
                        private val articleListener: ArticleListener,
-                       private val newsEntries: List<NewsResult.NewsEntry>) : RecyclerView.Adapter<NewsEntryAdapter.ViewHolder>() {
+                       private val newsResult: NewsResult) : RecyclerView.Adapter<NewsEntryAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
         = ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.news_entry, parent, false))
 
-    override fun getItemCount(): Int = newsEntries.size
+    override fun getItemCount(): Int = newsResult.articles.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textViewArticleTitle.text = newsEntries[position].title
-        holder.textViewArticleDescription.text = newsEntries[position].description
-        holder.textViewDatePublished.text = newsEntries[position].publishedAt
+        holder.textViewArticleTitle.text = newsResult.articles[position].title
+        holder.textViewArticleDescription.text = newsResult.articles[position].description
+        holder.textViewDatePublished.text = newsResult.articles[position].publishedAt
 
         val bufferingWheel = CircularProgressDrawable(context)
         bufferingWheel.strokeWidth = 5f
@@ -40,7 +40,7 @@ class NewsEntryAdapter(private val context: Context,
             .override(600, 300)
 
         Glide.with(context)
-            .load(newsEntries[position].urlToImage)
+            .load(newsResult.articles[position].urlToImage)
             .apply(requestOptions)
             .into(holder.imageViewArticleImage)
     }
@@ -62,7 +62,7 @@ class NewsEntryAdapter(private val context: Context,
 
         override fun onClick(view: View?) {
             when {
-                view?.id == R.id.cardViewArticle -> articleListener.articleSelected(newsEntries[adapterPosition])
+                view?.id == R.id.cardViewArticle -> articleListener.articleSelected(newsResult.articles[adapterPosition])
             }
         }
     }
