@@ -47,4 +47,11 @@ interface NewsApiClient {
                    @Query("sortBy") sortBy : String? = null,
                    @Query("pageSize") pageSize : Int? = null,
                    @Query("page") page : Int? = null) : Single<NewsResult>
+
+    @Headers("X-Api-Key: ${BuildConfig.News_API_Key}")
+    @GET("/v2/sources")
+    fun sources(@Query("category") category : String? = null,
+                @Query("language") language : String? = null,
+                @Query("country") country : String? = null) : Single<NewsResult>
+
 }

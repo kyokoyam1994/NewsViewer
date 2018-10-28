@@ -1,4 +1,4 @@
-package com.example.yokoyama.newsviewer
+package com.example.yokoyama.newsviewer.adapter
 
 import android.content.Context
 import android.support.v4.widget.CircularProgressDrawable
@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.example.yokoyama.newsviewer.R
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
 import kotlinx.android.synthetic.main.news_entry.view.*
 

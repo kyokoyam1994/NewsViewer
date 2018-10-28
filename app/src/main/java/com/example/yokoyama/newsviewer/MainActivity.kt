@@ -1,5 +1,16 @@
 package com.example.yokoyama.newsviewer
 
+import ARTICLES_PER_PAGE_DEFAULT
+import ARTICLES_PER_PAGE_KEY
+import LEFT_BIAS
+import MIN_PAGE
+import RIGHT_BIAS
+
+import defaultSharedPreferences
+import px
+import currCountry
+import currLanguage
+
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -19,10 +30,12 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import asyncIO
+import com.example.yokoyama.newsviewer.adapter.NewsEntryAdapter
 import com.example.yokoyama.newsviewer.newsapi.NewsApiClient
 import com.example.yokoyama.newsviewer.newsapi.NewsError
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
 import com.fasterxml.jackson.databind.ObjectMapper
+import get
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -30,13 +43,12 @@ import kotlinx.android.synthetic.main.news_viewer_scrollview.*
 import plusAssign
 import retrofit2.HttpException
 
-import px
-
-const val PAGE_SIZE = 20
-const val LEFT_BIAS = 4
-const val RIGHT_BIAS = 5
-const val MIN_PAGE = 1
-const val MAX_ARTICLES = 1000
+enum class ResponseState {
+    SUCCESS,
+    NO_RESULTS,
+    SEARCH_TOO_BROAD,
+    OTHER_ERROR
+}
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
@@ -44,54 +56,68 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val newsViewModel : NewsViewModel by lazy { ViewModelProviders.of(this).get(NewsViewModel::class.java) }
 
     private fun reloadArticles(state : SearchState) {
-        when (state.currentCategory) {
-            is NewsCategory.Everything -> {
+        when (state.currentType) {
+            is NewsType.Everything -> {
                 spinnerSort.visibility = View.VISIBLE
-                supportActionBar?.title = state.currentCategory.title
+                supportActionBar?.title = state.currentType.title
             }
 
-            is NewsCategory.TopHeadlines -> {
+            is NewsType.TopHeadlines -> {
                 spinnerSort.visibility = View.GONE
-                supportActionBar?.title = state.currentCategory.topHeadlinesCategory.category.capitalize()
+                supportActionBar?.title = state.currentType.category.displayName
             }
         }
 
-        val response = when (state.currentCategory) {
-            is NewsCategory.Everything -> NewsApiClient.instance.everything(q = state.queryString,
+        val response = when (state.currentType) {
+            is NewsType.Everything -> NewsApiClient.instance.everything(
+                    q = state.queryString,
                     sortBy = when(spinnerSort.selectedItem.toString()) {
                         resources.getString(R.string.spinner_sort_relevancy_option) -> "relevancy"
                         resources.getString(R.string.spinner_sort_popularity_option) -> "popularity"
                         resources.getString(R.string.spinner_sort_published_date_option) -> "publishedAt"
                         else -> null
                     },
+                    language = state.currentType.language.abbr,
                     pageSize = state.pageSize,
                     page = state.currentPage)
 
-            is NewsCategory.TopHeadlines -> NewsApiClient.instance.topHeadlines(country = "us",
-                    category = state.currentCategory.topHeadlinesCategory.category,
+            is NewsType.TopHeadlines ->
+                    NewsApiClient.instance.topHeadlines(
                     q = state.queryString,
+                    country = state.currentType.country.abbr,
+                    category = state.currentType.category.abbr,
                     pageSize = state.pageSize,
                     page = state.currentPage)
         }
 
-        compositeDisposable += response.asyncIO().subscribe(
-            {result ->
-                    Log.d("TAG", "SUCCESS")
-                    textViewInfoMessage.visibility = View.GONE
-                    recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, result)
-                    recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this@MainActivity)
-                    populatePages(result)},
-            {e ->
-                when (e) {
-                    is HttpException  ->  {
-                        val mapper = ObjectMapper()
-                        val newsError = mapper.readValue<NewsError>(e.response().errorBody()?.string(), NewsError::class.java)
-                        Log.d("TAG", newsError.toString())
-                    }
-                }
-                recyclerViewNewsArticles.adapter = NewsEntryAdapter(this@MainActivity, this@MainActivity, NewsResult())
-                textViewInfoMessage.visibility = View.VISIBLE}
-        )
+
+        compositeDisposable += response.asyncIO().subscribe({onResponseSuccess(it)}, {onResponseError(it)})
+    }
+
+    private fun onResponseSuccess(result : NewsResult) {
+        val state = when {
+            result.totalResults > 0 -> ResponseState.SUCCESS
+            else -> ResponseState.NO_RESULTS
+        }
+        updateResponseState(state, result)
+    }
+
+    private fun onResponseError(e : Throwable) {
+        var broadSearch = false
+        when (e) {
+            is HttpException  ->  {
+                val mapper = ObjectMapper()
+                val newsError = mapper.readValue<NewsError>(e.response().errorBody()?.string(), NewsError::class.java)
+                if (newsError.code == "parametersMissing") broadSearch = true
+                Log.d("TAG", newsError.toString())
+            }
+        }
+
+        val state = when (broadSearch) {
+            true -> ResponseState.SEARCH_TOO_BROAD
+            else -> ResponseState.OTHER_ERROR
+        }
+        updateResponseState(state, NewsResult())
     }
 
     private fun populatePages(result : NewsResult) {
@@ -102,7 +128,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         var rightBound = when {
-            newsViewModel.currentState.value!!.currentPage + RIGHT_BIAS > result.pageCount -> result.pageCount
+            newsViewModel.currentState.value!!.currentPage + RIGHT_BIAS > result.pageCount(this) -> result.pageCount(this)
             else -> newsViewModel.currentState.value!!.currentPage + RIGHT_BIAS
         }
 
@@ -114,12 +140,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             rightBound = when {
-                rightBound + (limit - difference) > result.pageCount -> result.pageCount
+                rightBound + (limit - difference) > result.pageCount(this) -> result.pageCount(this)
                 else -> rightBound + (limit - difference)
             }
         }
 
-        textViewCurrentPage.text = "Page ${newsViewModel.currentState.value!!.currentPage} of ${result.pageCount}"
+        textViewCurrentPage.text = "Page ${newsViewModel.currentState.value!!.currentPage} of ${result.pageCount(this)}"
         if (newsViewModel.currentState.value!!.currentPage - 1 < MIN_PAGE) {
             imageViewFirst.visibility = View.GONE
             imageViewPrev.visibility = View.GONE
@@ -132,7 +158,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             imageViewPrev.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = newsViewModel.currentState.value!!.currentPage - 1)) }
         }
 
-        if (newsViewModel.currentState.value!!.currentPage + 1 > result.pageCount) {
+        if (newsViewModel.currentState.value!!.currentPage + 1 > result.pageCount(this)) {
             imageViewNext.visibility = View.GONE
             imageViewLast.visibility = View.GONE
             imageViewNext.setOnClickListener(null)
@@ -141,7 +167,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             imageViewNext.visibility = View.VISIBLE
             imageViewLast.visibility = View.VISIBLE
             imageViewNext.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = newsViewModel.currentState.value!!.currentPage + 1)) }
-            imageViewLast.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = result.pageCount)) }
+            imageViewLast.setOnClickListener { newsViewModel.updateState(newsViewModel.currentState.value!!.copy(currentPage = result.pageCount(this))) }
         }
 
         linearLayoutPageIndicator.removeAllViews()
@@ -160,6 +186,55 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun clearPages() {
+        textViewCurrentPage.text = ""
+        imageViewFirst.visibility = View.GONE
+        imageViewPrev.visibility = View.GONE
+        imageViewNext.visibility = View.GONE
+        imageViewLast.visibility = View.GONE
+        imageViewFirst.setOnClickListener(null)
+        imageViewPrev.setOnClickListener(null)
+        imageViewNext.setOnClickListener(null)
+        imageViewLast.setOnClickListener(null)
+        linearLayoutPageIndicator.removeAllViews()
+    }
+
+
+    private fun updateResponseState(state: ResponseState, result: NewsResult) {
+        //Log.d("TEST 1", (viewSwitcher == null).toString())
+        //Log.d("TEST 2", (findViewById<ViewSwitcher>(R.id.viewSwitcher) == null).toString())
+        when (state) {
+            ResponseState.SUCCESS -> {
+                layoutErrorMessage.visibility = View.GONE
+                //viewSwitcher.displayedChild = 0
+                populatePages(result)
+            }
+            ResponseState.NO_RESULTS -> {
+                textViewErrorIcon.text = resources.getString(R.string.text_view_info_no_results)
+                imageViewErrorIcon.setImageResource(R.drawable.error_image_results)
+                layoutErrorMessage.visibility = View.VISIBLE
+                //viewSwitcher.displayedChild = 1
+                clearPages()
+            }
+            ResponseState.SEARCH_TOO_BROAD -> {
+                textViewErrorIcon.text = resources.getString(R.string.text_view_info_search_too_broad)
+                imageViewErrorIcon.setImageResource(R.drawable.error_image_results)
+                layoutErrorMessage.visibility = View.VISIBLE
+                //viewSwitcher.displayedChild = 1
+                clearPages()
+            }
+            ResponseState.OTHER_ERROR -> {
+                textViewErrorIcon.text = resources.getString(R.string.text_view_info_error)
+                imageViewErrorIcon.setImageResource(R.drawable.error_image_other)
+                layoutErrorMessage.visibility = View.VISIBLE
+                //viewSwitcher.displayedChild = 1
+                clearPages()
+            }
+        }
+        recyclerViewNewsArticles.adapter = NewsEntryAdapter(this, this, result)
+        recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -171,8 +246,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
         buttonSearch.setOnClickListener {
-            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, queryString = searchView.query.toString(),
-                                        pageSize = PAGE_SIZE, currentCategory = newsViewModel.currentState.value!!.currentCategory))
+            val type = newsViewModel.currentState.value!!.currentType
+            newsViewModel.updateState(
+                SearchState(currentPage = MIN_PAGE,
+                            queryString = searchView.query.toString(),
+                            pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
+                            currentType = when(type) {
+                                is NewsType.Everything -> NewsType.Everything(currLanguage)
+                                is NewsType.TopHeadlines -> NewsType.TopHeadlines(type.category, currCountry)
+                            })
+            )
         }
 
         val stateObserver : Observer<SearchState> = Observer {
@@ -182,7 +265,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         newsViewModel.currentState.observe(this, stateObserver)
         if (newsViewModel.currentState.value == null) {
-            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, pageSize = PAGE_SIZE, currentCategory = NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL)))
+            newsViewModel.updateState(
+                SearchState(currentPage = MIN_PAGE,
+                            pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
+                            currentType = NewsType.TopHeadlines(Category.GENERAL, currCountry))
+            )
         }
     }
 
@@ -198,7 +285,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -212,21 +302,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        var state : NewsCategory? = null
+        var state : NewsType? = null
+
         when (item.itemId) {
-            R.id.nav_home -> state = NewsCategory.Everything
-            R.id.nav_business -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.BUSINESS)
-            R.id.nav_entertainment -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.ENTERTAINMENT)
-            R.id.nav_general -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.GENERAL)
-            R.id.nav_health -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.HEALTH)
-            R.id.nav_science -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.SCIENCE)
-            R.id.nav_sports -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.SPORTS)
-            R.id.nav_technology -> state = NewsCategory.TopHeadlines(TopHeadlinesCategory.TECHNOLOGY)
+            R.id.nav_home -> state = NewsType.Everything(currLanguage)
+            R.id.nav_business -> state = NewsType.TopHeadlines(Category.BUSINESS, currCountry)
+            R.id.nav_entertainment -> state = NewsType.TopHeadlines(Category.ENTERTAINMENT,currCountry)
+            R.id.nav_general -> state = NewsType.TopHeadlines(Category.GENERAL, currCountry)
+            R.id.nav_health -> state = NewsType.TopHeadlines(Category.HEALTH, currCountry)
+            R.id.nav_science -> state = NewsType.TopHeadlines(Category.SCIENCE, currCountry)
+            R.id.nav_sports -> state = NewsType.TopHeadlines(Category.SPORTS, currCountry)
+            R.id.nav_technology -> state = NewsType.TopHeadlines(Category.TECHNOLOGY, currCountry)
             R.id.nav_settings -> startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         if (state != null) {
-            newsViewModel.updateState(SearchState(currentPage = MIN_PAGE, pageSize = PAGE_SIZE, currentCategory = state))
+            newsViewModel.updateState(
+                SearchState(currentPage = MIN_PAGE,
+                            pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
+                            currentType = state)
+            )
         }
         drawer_layout.closeDrawer(GravityCompat.START)
         return true

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <integer-array name="spinner_articles_per_page_entries">
-        <item>20</item>
-        <item>50</item>
-        <item>80</item>
-        <item>100</item>
-    </integer-array>
-</resources>

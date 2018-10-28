@@ -1,114 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--<ViewSwitcher xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/viewSwitcher"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">-->
+
+<android.support.v4.widget.NestedScrollView android:id="@+id/nestedScrollViewNewsArticles"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.constraint.ConstraintLayout
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/layoutErrorMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/imageViewErrorIcon"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="1dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textViewErrorIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/text_view_info_search_too_broad"
+                    android:textAlignment="center"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/imageViewErrorIcon"
+                    app:layout_constraintHorizontal_bias="0.515"
+                    app:layout_constraintStart_toStartOf="@+id/imageViewErrorIcon"
+                    app:layout_constraintTop_toBottomOf="@+id/imageViewErrorIcon"
+                    app:layout_constraintVertical_bias="0.0" />
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerViewNewsArticles"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/textViewCurrentPage"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"></android.support.v7.widget.RecyclerView>
+
+            <TextView
+                android:id="@+id/textViewCurrentPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="12dp"
+                app:layout_constraintBottom_toTopOf="@+id/linearLayoutPageIndicator"
+                app:layout_constraintEnd_toEndOf="@+id/recyclerViewNewsArticles"
+                app:layout_constraintStart_toStartOf="@+id/recyclerViewNewsArticles" />
+
+            <ImageView
+                android:id="@+id/imageViewFirst"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/imageViewPrev"
+                app:layout_constraintEnd_toStartOf="@+id/imageViewPrev"
+                app:layout_constraintTop_toTopOf="@+id/imageViewPrev"
+                app:srcCompat="@drawable/first_button_24" />
+
+            <ImageView
+                android:id="@+id/imageViewPrev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewCurrentPage"
+                app:layout_constraintEnd_toStartOf="@+id/textViewCurrentPage"
+                app:layout_constraintTop_toTopOf="@+id/textViewCurrentPage"
+                app:srcCompat="@drawable/prev_button_24" />
+
+            <ImageView
+                android:id="@+id/imageViewNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewCurrentPage"
+                app:layout_constraintStart_toEndOf="@+id/textViewCurrentPage"
+                app:layout_constraintTop_toTopOf="@+id/textViewCurrentPage"
+                app:srcCompat="@drawable/next_button_24" />
+
+            <ImageView
+                android:id="@+id/imageViewLast"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/imageViewNext"
+                app:layout_constraintStart_toEndOf="@+id/imageViewNext"
+                app:layout_constraintTop_toTopOf="@+id/imageViewNext"
+                app:srcCompat="@drawable/last_button_24" />
+
+            <LinearLayout
+                android:id="@+id/linearLayoutPageIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/textViewCurrentPage"
+                app:layout_constraintStart_toStartOf="@+id/textViewCurrentPage" />
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v4.widget.NestedScrollView>
+
+
+    <!--<android.support.constraint.ConstraintLayout
+        android:id="@+id/layoutErrorMessage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/textViewInfoMessage"
+        <ImageView
+            android:id="@+id/imageViewErrorIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="There was an error retrieving articles from the server"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.26999998" />
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerViewNewsArticles"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/textViewCurrentPage"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-        </android.support.v7.widget.RecyclerView>
-
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/textViewCurrentPage"
+            android:id="@+id/textViewErrorIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="12dp"
-            app:layout_constraintBottom_toTopOf="@+id/linearLayoutPageIndicator"
-            app:layout_constraintEnd_toEndOf="@+id/recyclerViewNewsArticles"
-            app:layout_constraintStart_toStartOf="@+id/recyclerViewNewsArticles" />
-
-        <ImageView
-            android:id="@+id/imageViewFirst"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/imageViewPrev"
-            app:layout_constraintEnd_toStartOf="@+id/imageViewPrev"
-            app:layout_constraintTop_toTopOf="@+id/imageViewPrev"
-            app:srcCompat="@drawable/first_button_24" />
-
-        <ImageView
-            android:id="@+id/imageViewPrev"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewCurrentPage"
-            app:layout_constraintEnd_toStartOf="@+id/textViewCurrentPage"
-            app:layout_constraintTop_toTopOf="@+id/textViewCurrentPage"
-            app:srcCompat="@drawable/prev_button_24" />
-
-        <ImageView
-            android:id="@+id/imageViewNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewCurrentPage"
-            app:layout_constraintStart_toEndOf="@+id/textViewCurrentPage"
-            app:layout_constraintTop_toTopOf="@+id/textViewCurrentPage"
-            app:srcCompat="@drawable/next_button_24" />
-
-        <ImageView
-            android:id="@+id/imageViewLast"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/imageViewNext"
-            app:layout_constraintStart_toEndOf="@+id/imageViewNext"
-            app:layout_constraintTop_toTopOf="@+id/imageViewNext"
-            app:srcCompat="@drawable/last_button_24" />
-
-
-        <LinearLayout
-            android:id="@+id/linearLayoutPageIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginBottom="12dp"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/text_view_info_search_too_broad"
+            android:textAlignment="center"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/textViewCurrentPage"
-            app:layout_constraintStart_toStartOf="@+id/textViewCurrentPage">
-
-        </LinearLayout>
-
-
-
-
-
-
-
-    </android.support.constraint.ConstraintLayout>
-</android.support.v4.widget.NestedScrollView>
+            app:layout_constraintEnd_toEndOf="@+id/imageViewErrorIcon"
+            app:layout_constraintHorizontal_bias="0.515"
+            app:layout_constraintStart_toStartOf="@+id/imageViewErrorIcon"
+            app:layout_constraintTop_toBottomOf="@+id/imageViewErrorIcon"
+            app:layout_constraintVertical_bias="0.0" />
+    </android.support.constraint.ConstraintLayout>-->
+<!--</ViewSwitcher>-->

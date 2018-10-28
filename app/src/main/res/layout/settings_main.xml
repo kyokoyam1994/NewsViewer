@@ -2,7 +2,6 @@
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -11,8 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:text="@string/text_view_articles_per_page_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,37 +20,89 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textViewArticlesPerPage" />
 
     <TextView
-        android:id="@+id/textViewTopHeadlinesCountry"
+        android:id="@+id/textViewTopHeadlinesTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/text_view_top_headlines_title_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintStart_toStartOf="@+id/dividerTopHeadlines"
+        app:layout_constraintTop_toBottomOf="@+id/textViewArticlesPerPage" />
+
+    <View
+        android:id="@+id/dividerTopHeadlines"
+        style="@style/Divider"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewTopHeadlinesTitle" />
+
+    <TextView
+        android:id="@+id/textViewCountry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="32dp"
-        android:text="Country"
+        android:layout_marginTop="16dp"
+        android:text="@string/text_view_country_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewArticlesPerPage" />
+        app:layout_constraintTop_toBottomOf="@+id/dividerTopHeadlines" />
 
     <TextView
-        android:id="@+id/textViewTopHeadlinesCountryHint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Hint"
-        app:layout_constraintStart_toStartOf="@+id/textViewTopHeadlinesCountry"
-        app:layout_constraintTop_toBottomOf="@+id/textViewTopHeadlinesCountry" />
-
-    <Spinner
-        android:id="@+id/spinnerTopHeadlinesCountry"
+        android:id="@+id/textViewSpinnerCountry"
+        style="@android:style/Widget.Material.Spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/textViewTopHeadlinesCountryHint"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textViewTopHeadlinesCountry" />
+        app:layout_constraintTop_toTopOf="@+id/textViewCountry" />
+
+    <TextView
+        android:id="@+id/textViewTopHeadlinesEverything"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:text="@string/text_view_everything_title_text"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintStart_toStartOf="@+id/dividerEverything"
+        app:layout_constraintTop_toBottomOf="@+id/textViewCountry" />
+
+    <View
+        android:id="@+id/dividerEverything"
+        style="@style/Divider"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewTopHeadlinesEverything" />
+
+    <TextView
+        android:id="@+id/textViewLanguages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/text_view_languages_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dividerEverything" />
+
+    <TextView
+        android:id="@+id/textViewSpinnerLanguage"
+        style="@android:style/Widget.Material.Spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textViewLanguages" />
+
 </android.support.constraint.ConstraintLayout>

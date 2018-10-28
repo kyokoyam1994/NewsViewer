@@ -48,6 +48,7 @@
         app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
     <include
+        android:id="@+id/include"
         layout="@layout/news_viewer_scrollview"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -63,36 +64,20 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:entries="@array/spinner_sort_options"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/buttonSearch"
         app:layout_constraintEnd_toStartOf="@+id/buttonSearch"
         app:layout_constraintTop_toTopOf="@+id/buttonSearch" />
 
-    <!--<android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerViewNewsArticles"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/pageIndicator"
-        app:layout_constraintEnd_toEndOf="@+id/buttonSearch"
-        app:layout_constraintHorizontal_bias="0.166"
-        app:layout_constraintStart_toStartOf="@+id/searchView"
-        app:layout_constraintTop_toBottomOf="@+id/buttonSearch"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <include
-        android:id="@+id/pageIndicator"
-        layout="@layout/page_indicator"
+    <!--<Spinner
+        android:id="@+id/spinnerArticlesPerPage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/recyclerViewNewsArticles"
-        app:layout_constraintStart_toStartOf="@+id/recyclerViewNewsArticles" />-->
+        android:layout_marginStart="16dp"
+        android:entries="@array/spinner_articles_per_page_entries"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonSearch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/buttonSearch" />-->
+
 
 </android.support.constraint.ConstraintLayout>

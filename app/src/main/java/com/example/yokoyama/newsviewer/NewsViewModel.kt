@@ -6,15 +6,14 @@ import android.arch.lifecycle.ViewModel
 class NewsViewModel : ViewModel() {
     val currentState: MutableLiveData<SearchState> by lazy { MutableLiveData<SearchState>() }
 
-    fun updateState(state: SearchState, mainThread : Boolean = true){
+    fun updateState(state: SearchState, mainThread : Boolean = true) =
         when (mainThread) {
             true -> currentState.value = state
             false -> currentState.postValue(state)
         }
-    }
 }
 
 data class SearchState (val currentPage : Int,
                         val pageSize : Int,
-                        val currentCategory : NewsCategory,
+                        val currentType : NewsType,
                         val queryString : String? = null)
