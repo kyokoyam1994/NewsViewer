@@ -25,17 +25,19 @@ class CountryAdapter(var checkedPosition: Int) : RecyclerView.Adapter<CountryAda
         holder.radioButtonItem.isChecked = position == checkedPosition
         holder.imageViewItem.visibility = View.VISIBLE
         countries[position].imageResource?.let { holder.imageViewItem.setImageResource(it) }
-
-        holder.radioButtonItem.setOnClickListener {
-            checkedPosition = holder.adapterPosition
-            notifyDataSetChanged()
-        }
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val radioButtonItem : RadioButton = itemView.radioButtonItem
         val textViewItem : TextView = itemView.textViewItemLabel
         val imageViewItem : ImageView = itemView.imageViewItem
+
+        init {
+            radioButtonItem.setOnClickListener {
+                checkedPosition = adapterPosition
+                notifyDataSetChanged()
+            }
+        }
     }
 
 }

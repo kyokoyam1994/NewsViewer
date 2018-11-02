@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     page = state.currentPage)
         }
 
-
+        viewFlipper.displayedChild = viewFlipper.indexOfChild(indeterminateBar)
         compositeDisposable += response.asyncIO().subscribe({onResponseSuccess(it)}, {onResponseError(it)})
     }
 
@@ -201,37 +201,31 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
 
     private fun updateResponseState(state: ResponseState, result: NewsResult) {
-        //Log.d("TEST 1", (viewSwitcher == null).toString())
-        //Log.d("TEST 2", (findViewById<ViewSwitcher>(R.id.viewSwitcher) == null).toString())
         when (state) {
             ResponseState.SUCCESS -> {
-                layoutErrorMessage.visibility = View.GONE
-                //viewSwitcher.displayedChild = 0
+                viewFlipper.displayedChild = viewFlipper.indexOfChild(includeNestedScrollViewArticles)
                 populatePages(result)
             }
             ResponseState.NO_RESULTS -> {
                 textViewErrorIcon.text = resources.getString(R.string.text_view_info_no_results)
                 imageViewErrorIcon.setImageResource(R.drawable.error_image_results)
-                layoutErrorMessage.visibility = View.VISIBLE
-                //viewSwitcher.displayedChild = 1
+                viewFlipper.displayedChild = viewFlipper.indexOfChild(layoutErrorMessage)
                 clearPages()
             }
             ResponseState.SEARCH_TOO_BROAD -> {
                 textViewErrorIcon.text = resources.getString(R.string.text_view_info_search_too_broad)
                 imageViewErrorIcon.setImageResource(R.drawable.error_image_results)
-                layoutErrorMessage.visibility = View.VISIBLE
-                //viewSwitcher.displayedChild = 1
+                viewFlipper.displayedChild = viewFlipper.indexOfChild(layoutErrorMessage)
                 clearPages()
             }
             ResponseState.OTHER_ERROR -> {
                 textViewErrorIcon.text = resources.getString(R.string.text_view_info_error)
                 imageViewErrorIcon.setImageResource(R.drawable.error_image_other)
-                layoutErrorMessage.visibility = View.VISIBLE
-                //viewSwitcher.displayedChild = 1
+                viewFlipper.displayedChild = viewFlipper.indexOfChild(layoutErrorMessage)
                 clearPages()
             }
         }
-        recyclerViewNewsArticles.adapter = NewsEntryAdapter(this, this, result)
+        recyclerViewNewsArticles.adapter = NewsEntryAdapter(this, this, result.articles)
         recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this)
     }
 

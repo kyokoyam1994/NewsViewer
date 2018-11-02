@@ -22,16 +22,18 @@ class LanguageAdapter(var checkedPosition: Int) : RecyclerView.Adapter<LanguageA
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.textViewItem.text = languages[position].displayName
         holder.radioButtonItem.isChecked = position == checkedPosition
-
-        holder.radioButtonItem.setOnClickListener {
-            checkedPosition = holder.adapterPosition
-            notifyDataSetChanged()
-        }
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val radioButtonItem : RadioButton = itemView.radioButtonItem
         val textViewItem : TextView = itemView.textViewItemLabel
+
+        init {
+            radioButtonItem.setOnClickListener {
+                checkedPosition = adapterPosition
+                notifyDataSetChanged()
+            }
+        }
     }
 
 }

@@ -14,6 +14,8 @@ import com.example.yokoyama.newsviewer.adapter.CountryAdapter
 import currCountry
 import java.lang.Exception
 
+const val COUNTRY_DIALOG_SELECTED_INDEX_KEY : String = "COUNTRY_DIALOG_SELECTED_INDEX_KEY"
+
 class CountryDialogFragment : AppCompatDialogFragment() {
 
     private lateinit var countrySelectedListener: CountrySelectedListener
@@ -57,6 +59,10 @@ class CountryDialogFragment : AppCompatDialogFragment() {
                     val adapter = recyclerViewDialog?.adapter as CountryAdapter
                     countrySelectedListener.countrySelected(adapter.countries[adapter.checkedPosition])
                 }.create()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
     }
 
 }

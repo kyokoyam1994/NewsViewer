@@ -25,11 +25,24 @@
         <item>@string/spinner_sort_popularity_option</item>
     </string-array>
 
+    <string-array name="spinner_sources_options">
+        <item>@string/spinner_sort_all_sources_option</item>
+        <item>@string/spinner_sort_from_selection_option</item>
+    </string-array>
+
+    <string name="spinner_sort_all_sources_option">All Sources</string>
+    <string name="spinner_sort_from_selection_option">From Selection</string>>
+
+
     <string name="text_view_articles_per_page_text">Articles Per Page</string>
     <string name="text_view_country_text">Country</string>>
-    <string name="text_view_languages_text">Language</string>>
+    <string name="text_view_languages_text">Language</string>
+    <string name="text_view_sources_text">Sources</string>>
 
-    <string name="text_view_top_headlines_title_text">Top Headlines</string>>
+    <string name="text_view_top_headlines_title_text">Top Headlines</string>
     <string name="text_view_everything_title_text">Everything</string>>
+
+    <string name="warning_too_many_sources">You cannot select more than 20 sources to filter.</string>>
+
 
 </resources>

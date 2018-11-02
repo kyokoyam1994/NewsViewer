@@ -17,17 +17,17 @@ import kotlinx.android.synthetic.main.news_entry.view.*
 
 class NewsEntryAdapter(private val context: Context,
                        private val articleListener: ArticleListener,
-                       private val newsResult: NewsResult) : RecyclerView.Adapter<NewsEntryAdapter.ViewHolder>() {
+                       private val articles: List<NewsResult.NewsEntry>) : RecyclerView.Adapter<NewsEntryAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
         = ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.news_entry, parent, false))
 
-    override fun getItemCount(): Int = newsResult.articles.size
+    override fun getItemCount(): Int = articles.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textViewArticleTitle.text = newsResult.articles[position].title
-        holder.textViewArticleDescription.text = newsResult.articles[position].description
-        holder.textViewDatePublished.text = newsResult.articles[position].publishedAt
+        holder.textViewArticleTitle.text = articles[position].title
+        holder.textViewArticleDescription.text = articles[position].description
+        holder.textViewDatePublished.text = articles[position].publishedAt
 
         val bufferingWheel = CircularProgressDrawable(context)
         bufferingWheel.strokeWidth = 5f
@@ -41,7 +41,7 @@ class NewsEntryAdapter(private val context: Context,
             .override(600, 300)
 
         Glide.with(context)
-            .load(newsResult.articles[position].urlToImage)
+            .load(articles[position].urlToImage)
             .apply(requestOptions)
             .into(holder.imageViewArticleImage)
     }
@@ -50,7 +50,7 @@ class NewsEntryAdapter(private val context: Context,
         fun articleSelected(newsEntry : NewsResult.NewsEntry)
     }
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardViewArticle : CardView = itemView.cardViewArticle
         val textViewArticleTitle : TextView = itemView.textViewArticleTitle
         val textViewArticleDescription: TextView = itemView.textViewArticleDescription
@@ -58,13 +58,7 @@ class NewsEntryAdapter(private val context: Context,
         val imageViewArticleImage : ImageView = itemView.imageViewArticleImage
 
         init {
-            cardViewArticle.setOnClickListener(this)
-        }
-
-        override fun onClick(view: View?) {
-            when {
-                view?.id == R.id.cardViewArticle -> articleListener.articleSelected(newsResult.articles[adapterPosition])
-            }
+            cardViewArticle.setOnClickListener { articleListener.articleSelected(articles[adapterPosition]) }
         }
     }
 

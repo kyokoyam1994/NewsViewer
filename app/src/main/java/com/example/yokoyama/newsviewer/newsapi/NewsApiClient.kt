@@ -52,6 +52,6 @@ interface NewsApiClient {
     @GET("/v2/sources")
     fun sources(@Query("category") category : String? = null,
                 @Query("language") language : String? = null,
-                @Query("country") country : String? = null) : Single<NewsResult>
+                @Query("country") country : String? = null) : Single<NewsSourceResult>
 
 }
