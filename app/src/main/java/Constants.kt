@@ -1,10 +1,14 @@
-import com.example.yokoyama.newsviewer.Country
-import com.example.yokoyama.newsviewer.Language
+import com.example.yokoyama.newsviewer.data.Country
+import com.example.yokoyama.newsviewer.data.Language
 
-const val ARTICLES_PER_PAGE_KEY = "Articles_Per_Page"
-const val COUNTRY_KEY = "Country"
-const val LANGUAGE_KEY = "Language"
-const val SOURCES_KEY = "Sources"
+const val ARTICLES_PER_PAGE_KEY = "ARTICLES_PER_PAGE_KEY"
+const val COUNTRY_KEY = "COUNTRY_KEY"
+const val LANGUAGE_KEY = "LANGUAGE_KEY"
+const val SOURCES_KEY = "SOURCES_KEY"
+
+const val COUNTRY_DIALOG_SELECTED_INDEX_KEY : String = "COUNTRY_DIALOG_SELECTED_INDEX_KEY"
+const val LANGUAGE_DIALOG_SELECTED_INDEX_KEY : String = "LANGUAGE_DIALOG_SELECTED_INDEX_KEY"
+const val SOURCES_DIALOG_SELECTED_SOURCES_KEY : String = "SOURCES_DIALOG_SELECTED_SOURCES_KEY"
 
 const val LEFT_BIAS = 4
 const val RIGHT_BIAS = 5

@@ -1,7 +1,10 @@
-package com.example.yokoyama.newsviewer
+package com.example.yokoyama.newsviewer.data
+
+import com.example.yokoyama.newsviewer.R
+import com.example.yokoyama.newsviewer.newsapi.NewsSourceResult
 
 sealed class NewsType {
-    class Everything (val language: Language) : NewsType() { val title = "Home" }
+    class Everything (val language: Language, val sources: List<NewsSourceResult.NewsSource>) : NewsType() { val title = "Home" }
     class TopHeadlines(val category: Category, val country: Country) : NewsType()
 }
 

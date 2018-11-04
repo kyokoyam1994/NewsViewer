@@ -1,4 +1,6 @@
-package com.example.yokoyama.newsviewer
+package com.example.yokoyama.newsviewer.data
+
+import com.example.yokoyama.newsviewer.R
 
 class SourceIconMap {
 

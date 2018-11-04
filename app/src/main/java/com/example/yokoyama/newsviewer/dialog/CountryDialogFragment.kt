@@ -1,5 +1,8 @@
 package com.example.yokoyama.newsviewer.dialog
 
+import COUNTRY_DIALOG_SELECTED_INDEX_KEY
+import currCountry
+
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
@@ -9,16 +12,13 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import com.example.yokoyama.newsviewer.R
-import com.example.yokoyama.newsviewer.Country
+import com.example.yokoyama.newsviewer.data.Country
 import com.example.yokoyama.newsviewer.adapter.CountryAdapter
-import currCountry
-import java.lang.Exception
-
-const val COUNTRY_DIALOG_SELECTED_INDEX_KEY : String = "COUNTRY_DIALOG_SELECTED_INDEX_KEY"
 
 class CountryDialogFragment : AppCompatDialogFragment() {
 
     private lateinit var countrySelectedListener: CountrySelectedListener
+    private lateinit var countryAdapter: CountryAdapter
 
     interface CountrySelectedListener {
         fun countrySelected(country: Country)
@@ -47,22 +47,23 @@ class CountryDialogFragment : AppCompatDialogFragment() {
         val recyclerViewDialog = inflatedView?.findViewById<RecyclerView>(R.id.recyclerViewDialog)
 
         activity?.let {
-            val countryIndex = Country.values().indexOf(it.currCountry)
-            recyclerViewDialog?.adapter = CountryAdapter(countryIndex)
+            val countryIndex = savedInstanceState?.getInt(COUNTRY_DIALOG_SELECTED_INDEX_KEY) ?: Country.values().indexOf(it.currCountry)
+            countryAdapter = CountryAdapter(countryIndex)
+            recyclerViewDialog?.adapter = countryAdapter
             recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
         }
 
-        return builder.setTitle("Countries")
+        return builder.setTitle(R.string.country_dialog_fragment_title_text)
                 .setView(inflatedView)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("OK") { _, _ ->
-                    val adapter = recyclerViewDialog?.adapter as CountryAdapter
-                    countrySelectedListener.countrySelected(adapter.countries[adapter.checkedPosition])
+                .setNegativeButton(R.string.dialog_fragment_negative_button_text, null)
+                .setPositiveButton(R.string.dialog_fragment_positive_button_text) { _, _ ->
+                    countrySelectedListener.countrySelected(countryAdapter.countries[countryAdapter.checkedPosition])
                 }.create()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putInt(COUNTRY_DIALOG_SELECTED_INDEX_KEY, countryAdapter.checkedPosition)
     }
 
 }

@@ -3,11 +3,12 @@ package com.example.yokoyama.newsviewer.newsapi
 import ARTICLES_PER_PAGE_DEFAULT
 import ARTICLES_PER_PAGE_KEY
 import MAX_ARTICLES
+import defaultSharedPreferences
+
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 import android.content.Context
 import android.os.Parcelable
-import defaultSharedPreferences
 import get
 import kotlinx.android.parcel.Parcelize
 
@@ -44,13 +45,13 @@ data class NewsSourceResult (val status: String = "default",
 
     @Entity
     @Parcelize
-    data class NewsSource (@PrimaryKey val id: String = "",
-                           val name: String = "",
-                           val description: String = "",
-                           val url: String = "",
-                           val category: String = "",
-                           val language: String = "",
-                           val country: String = "") : Parcelable
+    data class NewsSource (@PrimaryKey var id: String = "",
+                           var name: String = "",
+                           var description: String = "",
+                           var url: String = "",
+                           var category: String = "",
+                           var language: String = "",
+                           var country: String = "") : Parcelable
 
 }
 

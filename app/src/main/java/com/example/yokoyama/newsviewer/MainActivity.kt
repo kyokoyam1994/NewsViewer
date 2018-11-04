@@ -31,17 +31,26 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import asyncIO
 import com.example.yokoyama.newsviewer.adapter.NewsEntryAdapter
+import com.example.yokoyama.newsviewer.data.Category
+import com.example.yokoyama.newsviewer.data.NewsType
+import com.example.yokoyama.newsviewer.database.AppDatabase
 import com.example.yokoyama.newsviewer.newsapi.NewsApiClient
 import com.example.yokoyama.newsviewer.newsapi.NewsError
 import com.example.yokoyama.newsviewer.newsapi.NewsResult
+import com.example.yokoyama.newsviewer.newsapi.NewsSourceResult
+import com.example.yokoyama.newsviewer.viewmodel.NewsViewModel
+import com.example.yokoyama.newsviewer.viewmodel.SearchState
 import com.fasterxml.jackson.databind.ObjectMapper
 import get
+import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.news_viewer_scrollview.*
+import kotlinx.android.synthetic.main.sliding_toolbar_panel.*
 import plusAssign
 import retrofit2.HttpException
+import toHeader
 
 enum class ResponseState {
     SUCCESS,
@@ -71,6 +80,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val response = when (state.currentType) {
             is NewsType.Everything -> NewsApiClient.instance.everything(
                     q = state.queryString,
+                    sources = state.currentType.sources.toHeader(),
                     sortBy = when(spinnerSort.selectedItem.toString()) {
                         resources.getString(R.string.spinner_sort_relevancy_option) -> "relevancy"
                         resources.getString(R.string.spinner_sort_popularity_option) -> "popularity"
@@ -81,8 +91,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     pageSize = state.pageSize,
                     page = state.currentPage)
 
-            is NewsType.TopHeadlines ->
-                    NewsApiClient.instance.topHeadlines(
+            is NewsType.TopHeadlines -> NewsApiClient.instance.topHeadlines(
                     q = state.queryString,
                     country = state.currentType.country.abbr,
                     category = state.currentType.category.abbr,
@@ -240,24 +249,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view.setNavigationItemSelectedListener(this)
         buttonSearch.setOnClickListener {
-            val type = newsViewModel.currentState.value!!.currentType
-            newsViewModel.updateState(
-                SearchState(currentPage = MIN_PAGE,
-                            queryString = searchView.query.toString(),
-                            pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
-                            currentType = when(type) {
-                                is NewsType.Everything -> NewsType.Everything(currLanguage)
-                                is NewsType.TopHeadlines -> NewsType.TopHeadlines(type.category, currCountry)
-                            })
-            )
+            compositeDisposable += Single.create<List<NewsSourceResult.NewsSource>> {
+                it.onSuccess(AppDatabase.getInstance(this)!!.newsSourceDao().getAll())
+            }.asyncIO().subscribe {
+                sources -> val type = newsViewModel.currentState.value!!.currentType
+                newsViewModel.updateState(
+                    SearchState(currentPage = MIN_PAGE,
+                                queryString = searchView.query.toString(),
+                                pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
+                                currentType = when (type) {
+                                    is NewsType.Everything -> NewsType.Everything(currLanguage, sources)
+                                    is NewsType.TopHeadlines -> NewsType.TopHeadlines(type.category, currCountry)
+                                })
+                )
+            }
         }
 
         val stateObserver : Observer<SearchState> = Observer {
             Log.d("OBSERVING", "CHANGE!!!")
-            it?.let {reloadArticles(it)}
+            it?.let { reloadArticles(it) }
         }
 
         newsViewModel.currentState.observe(this, stateObserver)
+
         if (newsViewModel.currentState.value == null) {
             newsViewModel.updateState(
                 SearchState(currentPage = MIN_PAGE,
@@ -296,26 +310,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        var state : NewsType? = null
+        compositeDisposable += Single.create<List<NewsSourceResult.NewsSource>> {
+            it.onSuccess(AppDatabase.getInstance(this)!!.newsSourceDao().getAll())
+        }.asyncIO().subscribe { sources ->
+            var state: NewsType? = null
+            when (item.itemId) {
+                R.id.nav_home -> state = NewsType.Everything(currLanguage, sources)
+                R.id.nav_business -> state = NewsType.TopHeadlines(Category.BUSINESS, currCountry)
+                R.id.nav_entertainment -> state = NewsType.TopHeadlines(Category.ENTERTAINMENT, currCountry)
+                R.id.nav_general -> state = NewsType.TopHeadlines(Category.GENERAL, currCountry)
+                R.id.nav_health -> state = NewsType.TopHeadlines(Category.HEALTH, currCountry)
+                R.id.nav_science -> state = NewsType.TopHeadlines(Category.SCIENCE, currCountry)
+                R.id.nav_sports -> state = NewsType.TopHeadlines(Category.SPORTS, currCountry)
+                R.id.nav_technology -> state = NewsType.TopHeadlines(Category.TECHNOLOGY, currCountry)
+                R.id.nav_settings -> startActivity(Intent(this, SettingsActivity::class.java))
+            }
 
-        when (item.itemId) {
-            R.id.nav_home -> state = NewsType.Everything(currLanguage)
-            R.id.nav_business -> state = NewsType.TopHeadlines(Category.BUSINESS, currCountry)
-            R.id.nav_entertainment -> state = NewsType.TopHeadlines(Category.ENTERTAINMENT,currCountry)
-            R.id.nav_general -> state = NewsType.TopHeadlines(Category.GENERAL, currCountry)
-            R.id.nav_health -> state = NewsType.TopHeadlines(Category.HEALTH, currCountry)
-            R.id.nav_science -> state = NewsType.TopHeadlines(Category.SCIENCE, currCountry)
-            R.id.nav_sports -> state = NewsType.TopHeadlines(Category.SPORTS, currCountry)
-            R.id.nav_technology -> state = NewsType.TopHeadlines(Category.TECHNOLOGY, currCountry)
-            R.id.nav_settings -> startActivity(Intent(this, SettingsActivity::class.java))
-        }
-
-        if (state != null) {
-            newsViewModel.updateState(
-                SearchState(currentPage = MIN_PAGE,
-                            pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
-                            currentType = state)
-            )
+            if (state != null) {
+                newsViewModel.updateState(
+                    SearchState(currentPage = MIN_PAGE,
+                                pageSize = defaultSharedPreferences[ARTICLES_PER_PAGE_KEY, ARTICLES_PER_PAGE_DEFAULT] ?: ARTICLES_PER_PAGE_DEFAULT,
+                                currentType = state)
+                )
+            }
         }
         drawer_layout.closeDrawer(GravityCompat.START)
         return true

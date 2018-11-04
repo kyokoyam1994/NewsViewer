@@ -1,118 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<com.sothree.slidinguppanel.SlidingUpPanelLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/slidingLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:gravity="top"
+    sothree:umanoFadeColor="@android:color/transparent"
+    sothree:umanoInitialState="expanded"
+    sothree:umanoOverlay="true">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    <SearchView
-        android:id="@+id/searchView"
+    <android.support.constraint.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:background="@android:color/darker_gray"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
 
-    </SearchView>
-
-    <Button
-        android:id="@+id/buttonSearch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1"
-        android:text="Search"
-        app:layout_constraintEnd_toEndOf="@+id/searchView"
-        app:layout_constraintTop_toBottomOf="@+id/searchView" />
-
-    <ViewFlipper
-        android:id="@+id/viewFlipper"
-        android:layout_height="0dp"
-        android:layout_width="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonSearch">
-
-        <include
-            android:id="@+id/includeNestedScrollViewArticles"
-            layout="@layout/news_viewer_scrollview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/layoutErrorMessage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+        <ViewFlipper
+            android:id="@+id/viewFlipper"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <ImageView
-                android:id="@+id/imageViewErrorIcon"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                app:layout_constraintBottom_toTopOf="@+id/textViewErrorIcon"
+            <include
+                android:id="@+id/includeNestedScrollViewArticles"
+                layout="@layout/news_viewer_scrollview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/layoutErrorMessage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.3"
-                app:layout_constraintVertical_chainStyle="packed" />
+                app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/textViewErrorIcon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:text="@string/text_view_info_search_too_broad"
-                android:textAlignment="center"
-                android:visibility="visible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/imageViewErrorIcon" />
-        </android.support.constraint.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/imageViewErrorIcon"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="@dimen/sliding_layout_offset"
+                    app:layout_constraintBottom_toTopOf="@+id/textViewErrorIcon"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
 
-        <ProgressBar
-            android:id="@+id/indeterminateBar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:indeterminateDrawable="@drawable/circular_progress_bar"/>
+                <TextView
+                    android:id="@+id/textViewErrorIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/text_view_info_search_too_broad"
+                    android:textAlignment="center"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/imageViewErrorIcon" />
+            </android.support.constraint.ConstraintLayout>
 
-    </ViewFlipper>
+            <ProgressBar
+                android:id="@+id/indeterminateBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/sliding_layout_offset"
+                android:indeterminateDrawable="@drawable/circular_progress_bar" />
+        </ViewFlipper>
 
-    <Spinner
-        android:id="@+id/spinnerSort"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:entries="@array/spinner_sort_options"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/buttonSearch"
-        app:layout_constraintEnd_toStartOf="@+id/buttonSearch"
-        app:layout_constraintTop_toTopOf="@+id/buttonSearch" />
+    </android.support.constraint.ConstraintLayout>
 
-</android.support.constraint.ConstraintLayout>
+    <include
+        layout="@layout/sliding_toolbar_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>

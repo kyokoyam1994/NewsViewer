@@ -3,7 +3,6 @@
 <android.support.v4.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -11,7 +10,6 @@
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
 
         <TextView
             android:id="@+id/textViewArticlesPerPage"
@@ -121,36 +119,62 @@
             app:layout_constraintStart_toStartOf="@+id/textViewArticlesPerPage"
             app:layout_constraintTop_toBottomOf="@+id/textViewLanguages" />
 
-        <Spinner
-            android:id="@+id/spinnerSources"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:entries="@array/spinner_sources_options"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewSources"
-            app:layout_constraintEnd_toEndOf="@+id/spinnerArticlesPerPage"
-            app:layout_constraintTop_toTopOf="@+id/textViewSources" />
-
         <ImageView
             android:id="@+id/imageViewEditSources"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="12dp"
-            app:layout_constraintEnd_toEndOf="@+id/recyclerViewSources"
-            app:layout_constraintTop_toBottomOf="@+id/spinnerSources"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintBottom_toBottomOf="@+id/textViewSources"
+            app:layout_constraintEnd_toStartOf="@+id/imageViewClearSources"
+            app:layout_constraintTop_toTopOf="@+id/textViewSources"
+            app:layout_constraintVertical_bias="1.0"
             app:srcCompat="@drawable/settings_edit" />
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerViewSources"
+        <ImageView
+            android:id="@+id/imageViewClearSources"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="12dp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageViewEditSources"
+            app:layout_constraintEnd_toEndOf="@+id/textViewSpinnerLanguage"
+            app:layout_constraintTop_toTopOf="@+id/imageViewEditSources"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/settings_clear" />
+
+
+        <ViewFlipper
+            android:id="@+id/viewFlipper"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginTop="32dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewEditSources" />
+            app:layout_constraintTop_toBottomOf="@+id/imageViewEditSources"
+            app:layout_constraintVertical_bias="0.0">
+
+            <ProgressBar
+                android:id="@+id/indeterminateBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminateDrawable="@drawable/circular_progress_bar" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerViewSources"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"/>
+
+            <TextView
+                android:id="@+id/textViewNoSources"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/text_view_no_sources_text"
+                android:textAlignment="center" />
+        </ViewFlipper>
 
     </android.support.constraint.ConstraintLayout>
 </android.support.v4.widget.NestedScrollView>

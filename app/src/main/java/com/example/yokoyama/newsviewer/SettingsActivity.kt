@@ -8,32 +8,40 @@ import defaultSharedPreferences
 import currCountry
 import currLanguage
 
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
+import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import asyncIO
+import com.example.yokoyama.newsviewer.adapter.SourcesAdapter
+import com.example.yokoyama.newsviewer.data.Country
+import com.example.yokoyama.newsviewer.data.Language
 import com.example.yokoyama.newsviewer.database.AppDatabase
 import com.example.yokoyama.newsviewer.dialog.CountryDialogFragment
 import com.example.yokoyama.newsviewer.dialog.LanguageDialogFragment
 import com.example.yokoyama.newsviewer.dialog.SourcesDialogFragment
 import com.example.yokoyama.newsviewer.newsapi.NewsApiClient
 import com.example.yokoyama.newsviewer.newsapi.NewsSourceResult
+import com.example.yokoyama.newsviewer.viewmodel.SettingsViewModel
 import kotlinx.android.synthetic.main.settings_main.*
 import io.reactivex.disposables.CompositeDisposable
 import get
 import io.reactivex.Completable
 import io.reactivex.Single
+import io.reactivex.functions.BiFunction
 import plusAssign
 import set
-import java.util.ArrayList
+import java.lang.Exception
 
 class SettingsActivity : AppCompatActivity(), CountryDialogFragment.CountrySelectedListener,
         LanguageDialogFragment.LanguageSelectedListener, SourcesDialogFragment.SourcesSelectedListener{
 
     private val compositeDisposable : CompositeDisposable = CompositeDisposable()
+    private val settingsViewModel : SettingsViewModel by lazy { ViewModelProviders.of(this).get(SettingsViewModel::class.java) }
     private val articlesPerPageValues = arrayOf(10, 20, 40, 50)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,26 +71,43 @@ class SettingsActivity : AppCompatActivity(), CountryDialogFragment.CountrySelec
             LanguageDialogFragment.newInstance().show(supportFragmentManager, "Language")
         }
 
-        spinnerSources.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(p0: AdapterView<*>?) {}
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
-                val selection = parent?.getItemAtPosition(pos)
-                val visiblility = when (selection) {
-                    resources.getString(R.string.spinner_sort_all_sources_option) -> View.GONE
-                    else -> View.VISIBLE
-                }
-                imageViewEditSources.visibility = visiblility
-                recyclerViewSources.visibility = visiblility
-            }
-        }
-
         imageViewEditSources.setOnClickListener {
-            compositeDisposable += NewsApiClient.instance.sources().asyncIO().subscribe {
-                it -> Log.d("TAG", it.toString())
-                SourcesDialogFragment.newInstance(it.sources as ArrayList<NewsSourceResult.NewsSource>).show(supportFragmentManager, "Sources")
+            val databaseObservable = Single.create<List<NewsSourceResult.NewsSource>> {
+                val filteredSources =  settingsViewModel.filteredSources.value
+                when (filteredSources) {
+                    null -> it.onError(Exception())
+                    else -> it.onSuccess(filteredSources)
+                }
+            }
+
+            compositeDisposable += Single.zip(
+                    NewsApiClient.instance.sources(), databaseObservable,
+                    BiFunction { t1: NewsSourceResult, t2: List<NewsSourceResult.NewsSource> -> EditSourcesParameters(t1.sources, t2)})
+                    .asyncIO().subscribe { parameters ->
+                        SourcesDialogFragment.newInstance(parameters.retrievedSources as ArrayList<NewsSourceResult.NewsSource>,
+                                parameters.filteredSources as ArrayList<NewsSourceResult.NewsSource>).show(supportFragmentManager, "Sources")
+                    }
+        }
+
+        imageViewClearSources.setOnClickListener {
+            viewFlipper.displayedChild = viewFlipper.indexOfChild(indeterminateBar)
+            compositeDisposable += Completable.create {
+                AppDatabase.getInstance(this)?.newsSourceDao()?.deleteAll()
+                it.onComplete()
+            }.asyncIO().subscribe()
+        }
+
+        val stateObserver : Observer<List<NewsSourceResult.NewsSource>> = Observer {
+            it?.let {
+                recyclerViewSources.adapter = SourcesAdapter(this, false, it, mutableListOf())
+                recyclerViewSources.layoutManager = LinearLayoutManager(this)
+                when {
+                    it.isEmpty() -> viewFlipper.displayedChild = viewFlipper.indexOfChild(textViewNoSources)
+                    else -> viewFlipper.displayedChild = viewFlipper.indexOfChild(recyclerViewSources)
+                }
             }
         }
+        settingsViewModel.filteredSources.observe(this, stateObserver)
     }
 
     override fun onDestroy() {
@@ -101,11 +126,13 @@ class SettingsActivity : AppCompatActivity(), CountryDialogFragment.CountrySelec
     }
 
     override fun sourcesSelected(sources: List<NewsSourceResult.NewsSource>) {
-        /*Completable.create {
+        viewFlipper.displayedChild = viewFlipper.indexOfChild(indeterminateBar)
+        compositeDisposable += Completable.create {
             AppDatabase.getInstance(this)?.newsSourceDao()?.deleteAll()
             AppDatabase.getInstance(this)?.newsSourceDao()?.insertAll(sources)
-        }*/
-        //compositeDisposable +=
+            it.onComplete()
+        }.asyncIO().subscribe()
     }
-
 }
+
+data class EditSourcesParameters(val retrievedSources: List<NewsSourceResult.NewsSource>, val filteredSources: List<NewsSourceResult.NewsSource>)

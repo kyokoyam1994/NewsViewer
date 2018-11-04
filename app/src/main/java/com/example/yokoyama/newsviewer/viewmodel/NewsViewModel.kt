@@ -1,7 +1,8 @@
-package com.example.yokoyama.newsviewer
+package com.example.yokoyama.newsviewer.viewmodel
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import com.example.yokoyama.newsviewer.data.NewsType
 
 class NewsViewModel : ViewModel() {
     val currentState: MutableLiveData<SearchState> by lazy { MutableLiveData<SearchState>() }

@@ -40,9 +40,16 @@
     <string name="text_view_sources_text">Sources</string>>
 
     <string name="text_view_top_headlines_title_text">Top Headlines</string>
-    <string name="text_view_everything_title_text">Everything</string>>
+    <string name="text_view_everything_title_text">Everything</string>
+
+    <string name="country_dialog_fragment_title_text">Country</string>
+    <string name="language_dialog_fragment_title_text">Language</string>
+    <string name="sources_dialog_fragment_title_text">Sources</string>
+    <string name="dialog_fragment_positive_button_text">OK</string>
+    <string name="dialog_fragment_negative_button_text">Cancel</string>
+
 
     <string name="warning_too_many_sources">You cannot select more than 20 sources to filter.</string>>
-
+    <string name="text_view_no_sources_text">No sources have been selected.\nArticles from all sources will be retrieved by default.</string>>
 
 </resources>

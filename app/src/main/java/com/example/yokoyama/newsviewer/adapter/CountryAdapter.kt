@@ -8,7 +8,7 @@ import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.TextView
 import com.example.yokoyama.newsviewer.R
-import com.example.yokoyama.newsviewer.Country
+import com.example.yokoyama.newsviewer.data.Country
 import kotlinx.android.synthetic.main.radio_button_list_item.view.*
 
 class CountryAdapter(var checkedPosition: Int) : RecyclerView.Adapter<CountryAdapter.ViewHolder>() {

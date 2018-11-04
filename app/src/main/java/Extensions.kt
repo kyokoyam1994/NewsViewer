@@ -2,8 +2,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
-import com.example.yokoyama.newsviewer.Country
-import com.example.yokoyama.newsviewer.Language
+import com.example.yokoyama.newsviewer.data.Country
+import com.example.yokoyama.newsviewer.data.Language
+import com.example.yokoyama.newsviewer.newsapi.NewsSourceResult
+import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -41,8 +43,24 @@ inline fun SharedPreferences.edit(operation: (SharedPreferences.Editor) -> Unit)
     editor.apply()
 }
 
-//Shorthand function to subscribe on IO thread and observing on main thread
+//Shorthand functions to subscribe on IO thread and observe on main thread
 fun <T> Single<T>.asyncIO() : Single<T> = subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+fun Completable.asyncIO() : Completable = subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+
+fun List<NewsSourceResult.NewsSource>.toHeader(): String? {
+    return when {
+        isEmpty() -> null
+        else -> {
+            var result = ""
+            for ((index, value) in withIndex()) {
+                result += value.id
+                if (index < size - 1) result += ","
+            }
+            result
+        }
+    }
+}
 
 //Shorthand property for getting default shared preferences
 val Context.defaultSharedPreferences: SharedPreferences

@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.TextView
-import com.example.yokoyama.newsviewer.Language
+import com.example.yokoyama.newsviewer.data.Language
 import com.example.yokoyama.newsviewer.R
 import kotlinx.android.synthetic.main.radio_button_list_item.view.*
 
