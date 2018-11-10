@@ -9,14 +9,15 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import com.example.yokoyama.newsviewer.R
 import com.example.yokoyama.newsviewer.data.Country
 import com.example.yokoyama.newsviewer.adapter.CountryAdapter
+import kotlinx.android.synthetic.main.dialog_fragment.view.*
 
 class CountryDialogFragment : AppCompatDialogFragment() {
 
+    private val dialogTag = CountryDialogFragment::class::java.name
     private lateinit var countrySelectedListener: CountrySelectedListener
     private lateinit var countryAdapter: CountryAdapter
 
@@ -35,7 +36,7 @@ class CountryDialogFragment : AppCompatDialogFragment() {
         try {
             countrySelectedListener = context as CountrySelectedListener
         } catch (e : Exception) {
-            Log.d("TAG", "Context must implement ${CountrySelectedListener::class.java.name} interface")
+            Log.e(dialogTag, "Context must implement ${CountrySelectedListener::class.java.name} interface", e)
         }
     }
 
@@ -44,13 +45,11 @@ class CountryDialogFragment : AppCompatDialogFragment() {
         val inflater = activity?.layoutInflater
         val inflatedView = inflater?.inflate(R.layout.dialog_fragment, null)
 
-        val recyclerViewDialog = inflatedView?.findViewById<RecyclerView>(R.id.recyclerViewDialog)
-
         activity?.let {
             val countryIndex = savedInstanceState?.getInt(COUNTRY_DIALOG_SELECTED_INDEX_KEY) ?: Country.values().indexOf(it.currCountry)
             countryAdapter = CountryAdapter(countryIndex)
-            recyclerViewDialog?.adapter = countryAdapter
-            recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
+            inflatedView?.recyclerViewDialog?.adapter = countryAdapter
+            inflatedView?.recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
         }
 
         return builder.setTitle(R.string.country_dialog_fragment_title_text)

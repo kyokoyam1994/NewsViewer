@@ -4,6 +4,7 @@ import ARTICLES_PER_PAGE_DEFAULT
 import ARTICLES_PER_PAGE_KEY
 import LEFT_BIAS
 import MIN_PAGE
+import NESTED_SCROLL_POSITION_KEY
 import RIGHT_BIAS
 
 import defaultSharedPreferences
@@ -61,8 +62,10 @@ enum class ResponseState {
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, NewsEntryAdapter.ArticleListener {
 
+    private val tag = MainActivity::class::java.name
     private val compositeDisposable : CompositeDisposable = CompositeDisposable()
     private val newsViewModel : NewsViewModel by lazy { ViewModelProviders.of(this).get(NewsViewModel::class.java) }
+    private var nestedScrollPosition : IntArray? = null
 
     private fun reloadArticles(state : SearchState) {
         when (state.currentType) {
@@ -118,7 +121,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val mapper = ObjectMapper()
                 val newsError = mapper.readValue<NewsError>(e.response().errorBody()?.string(), NewsError::class.java)
                 if (newsError.code == "parametersMissing") broadSearch = true
-                Log.d("TAG", newsError.toString())
+                Log.d(tag, newsError.toString())
             }
         }
 
@@ -208,11 +211,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         linearLayoutPageIndicator.removeAllViews()
     }
 
-
     private fun updateResponseState(state: ResponseState, result: NewsResult) {
         when (state) {
             ResponseState.SUCCESS -> {
-                viewFlipper.displayedChild = viewFlipper.indexOfChild(includeNestedScrollViewArticles)
+                viewFlipper.displayedChild = viewFlipper.indexOfChild(nestedScrollViewNewsArticles)
                 populatePages(result)
             }
             ResponseState.NO_RESULTS -> {
@@ -234,8 +236,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 clearPages()
             }
         }
+
         recyclerViewNewsArticles.adapter = NewsEntryAdapter(this, this, result.articles)
         recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this)
+
+        val position = nestedScrollPosition
+        if (position != null) {
+            nestedScrollViewNewsArticles.scrollTo(position[0], position[1])
+            nestedScrollPosition = null
+        } else {
+            nestedScrollViewNewsArticles.scrollTo(0, 0)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -265,11 +276,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        val stateObserver : Observer<SearchState> = Observer {
-            Log.d("OBSERVING", "CHANGE!!!")
-            it?.let { reloadArticles(it) }
-        }
+        nestedScrollPosition = savedInstanceState?.getIntArray(NESTED_SCROLL_POSITION_KEY)
 
+        val stateObserver : Observer<SearchState> = Observer { it?.let { reloadArticles(it) } }
         newsViewModel.currentState.observe(this, stateObserver)
 
         if (newsViewModel.currentState.value == null) {
@@ -284,6 +293,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.clear()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.putIntArray(NESTED_SCROLL_POSITION_KEY, intArrayOf(nestedScrollViewNewsArticles.scrollX, nestedScrollViewNewsArticles.scrollY))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -339,7 +353,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun articleSelected(newsEntry: NewsResult.NewsEntry) {
-        Log.d("TAG", newsEntry.url)
+        Log.d(tag, newsEntry.url)
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(newsEntry.url)))
     }
 }

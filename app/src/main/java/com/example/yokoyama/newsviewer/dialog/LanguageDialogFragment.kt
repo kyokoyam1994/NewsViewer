@@ -9,14 +9,15 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import com.example.yokoyama.newsviewer.R
 import com.example.yokoyama.newsviewer.data.Language
 import com.example.yokoyama.newsviewer.adapter.LanguageAdapter
+import kotlinx.android.synthetic.main.dialog_fragment.view.*
 
 class LanguageDialogFragment : AppCompatDialogFragment() {
 
+    private val dialogTag = LanguageDialogFragment::class::java.name
     private lateinit var languageSelectedListener: LanguageSelectedListener
     private lateinit var languageAdapter: LanguageAdapter
 
@@ -35,7 +36,7 @@ class LanguageDialogFragment : AppCompatDialogFragment() {
         try {
             languageSelectedListener = context as LanguageSelectedListener
         } catch (e : Exception) {
-            Log.d("TAG", "Context must implement ${LanguageSelectedListener::class.java.name} interface")
+            Log.e(dialogTag, "Context must implement ${LanguageSelectedListener::class.java.name} interface", e)
         }
     }
 
@@ -44,13 +45,11 @@ class LanguageDialogFragment : AppCompatDialogFragment() {
         val inflater = activity?.layoutInflater
         val inflatedView = inflater?.inflate(R.layout.dialog_fragment, null)
 
-        val recyclerViewDialog = inflatedView?.findViewById<RecyclerView>(R.id.recyclerViewDialog)
-
         activity?.let {
             val languageIndex = savedInstanceState?.getInt(LANGUAGE_DIALOG_SELECTED_INDEX_KEY) ?: Language.values().indexOf(it.currLanguage)
             languageAdapter = LanguageAdapter(languageIndex)
-            recyclerViewDialog?.adapter = languageAdapter
-            recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
+            inflatedView?.recyclerViewDialog?.adapter = languageAdapter
+            inflatedView?.recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
         }
 
         return builder.setTitle(R.string.language_dialog_fragment_title_text)

@@ -10,9 +10,9 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        if (LeakCanary.isInAnalyzerProcess(this)) return
+        /*if (LeakCanary.isInAnalyzerProcess(this)) return
         Log.d(tag, "Installing LeakCanary...")
-        LeakCanary.install(this)
+        LeakCanary.install(this)*/
     }
 
 }

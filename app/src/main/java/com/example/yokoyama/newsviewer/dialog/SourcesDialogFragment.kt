@@ -9,15 +9,16 @@ import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import com.example.yokoyama.newsviewer.R
 import com.example.yokoyama.newsviewer.adapter.SourcesAdapter
 import com.example.yokoyama.newsviewer.newsapi.NewsSourceResult
 import java.util.ArrayList
+import kotlinx.android.synthetic.main.dialog_fragment.view.*
 
 class SourcesDialogFragment : DialogFragment() {
 
+    private val dialogTag = SourcesDialogFragment::class::java.name
     private lateinit var sourcesSelectedListener: SourcesSelectedListener
     private lateinit var sourcesAdapter: SourcesAdapter
 
@@ -41,7 +42,7 @@ class SourcesDialogFragment : DialogFragment() {
         try {
             sourcesSelectedListener = context as SourcesSelectedListener
         } catch (e : Exception) {
-            Log.d("TAG", "Context must implement ${SourcesSelectedListener::class.java.name} interface")
+            Log.d(dialogTag, "Context must implement ${SourcesSelectedListener::class.java.name} interface", e)
         }
     }
 
@@ -50,15 +51,13 @@ class SourcesDialogFragment : DialogFragment() {
         val inflater = activity?.layoutInflater
         val inflatedView = inflater?.inflate(R.layout.dialog_fragment, null)
 
-        val recyclerViewDialog = inflatedView?.findViewById<RecyclerView>(R.id.recyclerViewDialog)
-        val sources : List<NewsSourceResult.NewsSource> = arguments?.get(SOURCES_KEY) as? ArrayList<NewsSourceResult.NewsSource> ?: emptyList()
-        val selectedSources : MutableList<NewsSourceResult.NewsSource> = arguments?.get(SOURCES_DIALOG_SELECTED_SOURCES_KEY) as? ArrayList<NewsSourceResult.NewsSource> ?: mutableListOf()
-
+        val sources : List<NewsSourceResult.NewsSource> = arguments?.getParcelableArrayList(SOURCES_KEY) ?: emptyList()
+        val selectedSources : MutableList<NewsSourceResult.NewsSource> = arguments?.getParcelableArrayList(SOURCES_DIALOG_SELECTED_SOURCES_KEY) ?: mutableListOf()
 
         activity?.let {
             sourcesAdapter = SourcesAdapter(it, true, sources, selectedSources)
-            recyclerViewDialog?.adapter = sourcesAdapter
-            recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
+            inflatedView?.recyclerViewDialog?.adapter = sourcesAdapter
+            inflatedView?.recyclerViewDialog?.layoutManager = LinearLayoutManager(activity)
         }
 
         return builder.setTitle(R.string.sources_dialog_fragment_title_text)
