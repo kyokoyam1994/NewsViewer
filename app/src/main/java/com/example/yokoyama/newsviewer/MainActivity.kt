@@ -20,6 +20,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
+import android.support.v4.view.ViewCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -239,6 +240,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         recyclerViewNewsArticles.adapter = NewsEntryAdapter(this, this, result.articles)
         recyclerViewNewsArticles.layoutManager = LinearLayoutManager(this)
+        ViewCompat.setNestedScrollingEnabled(recyclerViewNewsArticles, false)
 
         val position = nestedScrollPosition
         if (position != null) {

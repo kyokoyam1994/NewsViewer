@@ -11,6 +11,7 @@ import currLanguage
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.v4.view.ViewCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
@@ -101,6 +102,7 @@ class SettingsActivity : AppCompatActivity(), CountryDialogFragment.CountrySelec
             it?.let {
                 recyclerViewSources.adapter = SourcesAdapter(this, false, it, mutableListOf())
                 recyclerViewSources.layoutManager = LinearLayoutManager(this)
+                ViewCompat.setNestedScrollingEnabled(recyclerViewSources, false)
                 when {
                     it.isEmpty() -> viewFlipper.displayedChild = viewFlipper.indexOfChild(textViewNoSources)
                     else -> viewFlipper.displayedChild = viewFlipper.indexOfChild(recyclerViewSources)
